@@ -22,6 +22,7 @@ const resolve = (config) => depend.merge({
         ],
         alias: {
             "@": path.resolve(__dirname, '../src/'),
+            "#": path.resolve(__dirname, '../web_modules/'),
         },
         extensions: [ '.tsx', '.ts', '.js', ".jsx" ],
     }

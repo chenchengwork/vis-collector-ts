@@ -47,7 +47,7 @@ const MainLayout: React.FC<RouteComponentProps> = (props) => {
     /**
      * 左侧菜单的收起和关闭
      */
-    const  onLeftMenuCollapse = () => {
+    const onLeftMenuCollapse = () => {
         const newCollapsed = !collapsed;
         setCollapsed(newCollapsed)
         setAppMenuLeftWidth(getLeftMenuWidth(newCollapsed))

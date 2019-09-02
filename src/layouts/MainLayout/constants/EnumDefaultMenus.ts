@@ -68,7 +68,7 @@ export const EnumDefaultMenus: TypeMenu[] = [
                     appType: EnumIconTypes.custom,
                     iconType: 'fuwei'
                 },
-                label: "我的可视化",
+                label: "leaflet",
                 url: EnumRouter.leaflet,
             },
         ]
