@@ -1,5 +1,4 @@
-import React from 'react';
-const { useState } = React;
+import React, { useState } from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import { Layout } from 'antd';
 import prompt from '@/utils/prompt';
@@ -14,9 +13,10 @@ import MenuHeader from './MenuHeader';
 import MenuLeft from './MenuLeft';
 
 import MainHeader from './MainHeader';
-export {MainHeader}
 import MainContent from "./MainContent"
+export {MainHeader}
 export {MainContent}
+export {LayoutCtx}
 
 const MainLayout: React.FC<RouteComponentProps> = (props) => {
 

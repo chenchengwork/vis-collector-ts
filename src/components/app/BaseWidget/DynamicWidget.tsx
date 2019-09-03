@@ -4,7 +4,6 @@ import css from 'styled-jsx/css';
 import { Icon, Tooltip } from 'antd';
 
 import {computeXY, debounce, showComponent, TypePosition } from "./util";
-export {default as WidgetStore} from './WidgetStore';
 
 interface BaseWidgetProps {
     style?: React.CSSProperties;
@@ -108,7 +107,3 @@ const {styles: closeIconStyles, className: closeIconClassName} = css.resolve`
         //margin-bottom: 20px;
     }
 `;
-
-const A = ()=> {
-    return <div>11112211232323</div>
-}
