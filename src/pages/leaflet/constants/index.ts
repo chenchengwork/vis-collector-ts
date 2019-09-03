@@ -3,8 +3,8 @@
  *  枚举widget的类型
  */
 export const EnumWidgetType = {
-    heightLine: "heightLine",           // 高度轴
-    test: "test",           // 高度轴
+    mapControlBar: "mapControlBar",           // 地图控制按钮
+    test: "test",                           // 高度轴
 };
 
 /**
@@ -24,19 +24,21 @@ export const EnumWidgetType = {
  *  containerProps.position = {x, y};   // 使用的属性
  * @type {{}}
  */
-export const EnumWidgetData = {
-    [EnumWidgetType.heightLine]: {
+export const EnumWidget = {
+    [EnumWidgetType.mapControlBar]: {
         containerProps: {
-            position: {leftX: 20, topY: 10}
+            position: {rightX: 50, topY: 20},
+            isShowClose: false,
         },
         widgetParams: {}
     },
-    [EnumWidgetType.test]: {
-        containerProps: {
-            position: {rightX: 0, bottomY: 0}
-        },
-        widgetParams: {}
-    },
+    // [EnumWidgetType.test]: {
+    //     containerProps: {
+    //         position: {rightX: 0, bottomY: 0},
+    //         isAllowDrag: true,
+    //     },
+    //     widgetParams: {}
+    // },
 };
 
 

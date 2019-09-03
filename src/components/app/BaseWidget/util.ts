@@ -8,6 +8,13 @@ export interface TypePosition {
 }
 
 /**
+ * 是否是undefined
+ * @param data
+ * @returns {boolean}
+ */
+export const isUndefined = (data: any) => data === undefined;
+
+/**
  * 是否是数字
  * @param data
  * @returns {boolean}

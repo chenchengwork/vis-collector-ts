@@ -180,7 +180,7 @@ export default class LeafletUtil {
     /**
      * 重置
      */
-    reset = (zoom: number) => {
+    reset = (zoom?: number) => {
         this.map.flyTo(CENTER, zoom || ZOOM.minZoom);
     }
 

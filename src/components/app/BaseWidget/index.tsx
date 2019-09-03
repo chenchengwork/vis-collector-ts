@@ -1,10 +1,10 @@
-import React, {useEffect, useRef, useState}  from "react";
-import Draggable, { DraggableProps } from 'react-draggable';
-import css from 'styled-jsx/css';
-import { Icon, Tooltip } from 'antd';
+import React from "react";
+import { Icon, Tooltip } from "antd";
+import {showComponent, TypePosition} from "./util";
 
-import {computeXY, debounce, showComponent, TypePosition } from "./util";
-export {default as WidgetStore} from './WidgetStore';
+import DynamicWidget from './DynamicWidget';
+import FixedWidget from "./FixedWidget";
+import WidgetStore from './WidgetStore';
 
 interface BaseWidgetProps {
     style?: React.CSSProperties;
@@ -12,103 +12,67 @@ interface BaseWidgetProps {
     position?: TypePosition,
     zIndex?: number;
     isShowClose?: boolean;
+    widgetStore: WidgetStore;
+    widgetType: string;
 }
 
-const BaseWidget: React.FC<BaseWidgetProps> = ({
-    style = {},
-    isAllowDrag = true,
-    position,
-    zIndex = 1,
-    widgetStore,
-    widgetType,
-    isShowClose = false,
-    children
-}) => {
-    const divRef: React.RefObject<HTMLDivElement> = useRef();
-    const [ realPosition, setRealPosition] = useState(computeXY(null, position));
+const BaseWidget: React.FC<BaseWidgetProps> = (props) => {
+    const { isAllowDrag = false, position, widgetStore, widgetType, isShowClose, children} = props;
 
-    useEffect(() => {
-        const handleResize = debounce(resize, 50);
-        window.addEventListener("resize", handleResize);
-        resize();
-
-        return () => window.removeEventListener("resize", handleResize)
-    }, []);
-
-
-    const resize = () => {
-        // 获取容器DOM
-        const containerDom = divRef.current.parentElement.parentElement as HTMLDivElement;
-        const {clientWidth: itemW, clientHeight: itemH} = divRef.current;
-        setRealPosition(computeXY(containerDom, position, itemW, itemH))
-    };
-
-    // @ts-ignore
-    const draggableProps: DraggableProps = {
-        handle:".header",
-        disabled: !isAllowDrag,
-        grid: [1, 1],
-        position: realPosition,
-        onStop: (e, ui) => setRealPosition({x: ui.x, y: ui.y})
-    };
-
-
+    if(isAllowDrag) return (
+        <DynamicWidget {...props}>
+            <Content {...{ widgetStore, widgetType, isShowClose}}>
+                {children}
+            </Content>
+        </DynamicWidget>
+    );
 
     return (
-        <Draggable {...draggableProps}>
-            <div ref={divRef} className="item" style={{ ...style, zIndex }}>
-                <div className="header">
-                    {showComponent(
-                        <Tooltip title="关闭" placement="right">
-                            <Icon
-                                type="close-circle"
-                                className={closeIconClassName}
-                                onClick={() => widgetStore.closeWidget(widgetType)}
-                            />
-                        </Tooltip>,
-                        isShowClose
-                    )}
-                </div>
-
+        <FixedWidget position={position}>
+            <Content {...{ widgetStore, widgetType, isShowClose}}>
                 {children}
-
-                {closeIconStyles}
-
-                {/*language=SCSS*/}
-                <style jsx>{`
-                    .item {
-                        :global(.header){
-                            position: relative;
-                            height: 10px;
-                            background-color: #1D2440;
-                            cursor: move;
-                        }
-                    
-                        position: absolute;
-                        background-color: rgba(0, 0, 0, 0.43);
-                        color: #fff;
-                        border-radius: 3px;
-                    }
-                `}</style>
-            </div>
-        </Draggable>
+            </Content>
+        </FixedWidget>
     );
 };
 
+export { WidgetStore }
+
 export default BaseWidget;
 
-// language=SCSS
-const {styles: closeIconStyles, className: closeIconClassName} = css.resolve`    
-    .anticon-close-circle{
-        position: absolute;
-        right: 0px;
-        top: 0px;
-        cursor: pointer;
-        color: #fff;
-        //margin-bottom: 20px;
-    }
-`;
 
-const A = ()=> {
-    return <div>11112211232323</div>
+/**
+ * 内容组件
+ */
+const Content: React.FC<{widgetStore: WidgetStore; widgetType: string; isShowClose: boolean;}> = ({children, widgetStore, widgetType, isShowClose}) => {
+
+    return (
+        <div className="content">
+            {showComponent(
+                <div className="header">
+                    <Tooltip title="关闭" placement="right">
+                        <Icon
+                            type="close-circle"
+                            onClick={() => widgetStore.closeWidget(widgetType)}
+                        />
+                    </Tooltip>
+                </div>,
+                isShowClose
+            )}
+
+            {children}
+
+            {/*language=SCSS*/}
+            <style jsx>{`
+                .content{
+                    :global(.header){
+                        position: relative;
+                        height: 10px;
+                        background-color: #1D2440;
+                        cursor: move;
+                    }
+                }
+            `}</style>
+        </div>
+    )
 }

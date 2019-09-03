@@ -1,19 +1,9 @@
-import React, { useContext } from 'react';
+import React from 'react';
+import { observer } from 'mobx-react-lite';
 import BaseMap, { TypeMapUtil } from "#/MapOfLeaflet";
 import { request } from '@/utils/T';
-import BaseWidget, { WidgetStore } from '@/components/app/BaseWidget'
-import { EnumWidgetData, EnumWidgetType } from './constants';
 
-const EnumDynamicWidgets = [
-    {
-        type: EnumWidgetType.heightLine,
-        Widget: () => <div style={{height: 100, width: 100, backgroundColor: "red"}}>111111</div>
-    },
-    {
-        type: EnumWidgetType.test,
-        Widget: () => <div style={{height: 100, width: 100, backgroundColor: "green"}} onClick={() => alert(111)}>22222</div>
-    },
-];
+import Widgets from './Widgets';
 
 const mapOptions = {
     zoom: 4,
@@ -22,6 +12,7 @@ const mapOptions = {
 
 
 const Map: React.FC = () => {
+
     const handleMapLoaded = (mapUtil: TypeMapUtil) => {
         console.log('mapUtil -> ', mapUtil)
 
@@ -45,32 +36,17 @@ const Map: React.FC = () => {
         //     console.log(resp);
         //     mapUtil.addWindyLayer(resp.data);
         // }, (resp) => console.log(resp.msg))
-
     };
-    const widgetStore = new WidgetStore(EnumWidgetData);
-    const { isShowWidget, widgetTypeToVal } = widgetStore;
+
 
     return (
         <BaseMap
             mapOptions={mapOptions}
-            onMapLoaded={handleMapLoaded}
+            // onMapLoaded={handleMapLoaded}
         >
-            {/*<QueryType />*/}
-            {EnumDynamicWidgets.map(({type, Widget}) => {
-                if(isShowWidget(type)){
-                    const {containerProps, widgetParams} = widgetTypeToVal.get(type);
-
-                    return (
-                        <BaseWidget key={type} widgetType={type} widgetStore={widgetStore} {...containerProps}>
-                            <Widget widgetType={type} widgetStore={widgetStore} {...widgetParams} />
-                        </BaseWidget>
-                    )
-                }
-
-                return null;
-            })}
+            <Widgets />
         </BaseMap>
     )
 };
 
-export default Map;
+export default observer(Map);
