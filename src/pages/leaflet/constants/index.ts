@@ -4,6 +4,7 @@
  */
 export const EnumWidgetType = {
     heightLine: "heightLine",           // 高度轴
+    test: "test",           // 高度轴
 };
 
 /**
@@ -26,7 +27,13 @@ export const EnumWidgetType = {
 export const EnumWidgetData = {
     [EnumWidgetType.heightLine]: {
         containerProps: {
-            position: {rightX: 20, topY: 10}
+            position: {leftX: 20, topY: 10}
+        },
+        widgetParams: {}
+    },
+    [EnumWidgetType.test]: {
+        containerProps: {
+            position: {rightX: 0, bottomY: 0}
         },
         widgetParams: {}
     },

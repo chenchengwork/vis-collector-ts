@@ -8,7 +8,8 @@ const EnumRouter = {
     rootRoute: to(''),		        // 根路由
 
     login: to('login'),		        // 登录
-    leaflet: to('leaflet'),		        // 我的可视化
+    leaflet: to('leaflet'),
+    mapboxgl: to('mapboxgl'),
 };
 
 export default EnumRouter;

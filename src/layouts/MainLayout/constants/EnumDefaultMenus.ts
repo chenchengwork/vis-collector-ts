@@ -71,6 +71,14 @@ export const EnumDefaultMenus: TypeMenu[] = [
                 label: "leaflet",
                 url: EnumRouter.leaflet,
             },
+            {
+                icon: {
+                    appType: EnumIconTypes.custom,
+                    iconType: 'fuwei'
+                },
+                label: "mapboxgl",
+                url: EnumRouter.mapboxgl,
+            },
         ]
     }
 ];

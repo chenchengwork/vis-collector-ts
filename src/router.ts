@@ -19,6 +19,11 @@ const routes = [
         component: import("@/pages/leaflet"),
         stores: {}
     },
+    {
+        uri: EnumRouter.mapboxgl,
+        component: import("@/pages/mapboxgl"),
+        stores: {}
+    },
 ];
 
 

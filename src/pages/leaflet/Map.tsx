@@ -9,7 +9,16 @@ const EnumDynamicWidgets = [
         type: EnumWidgetType.heightLine,
         Widget: () => <div style={{height: 100, width: 100, backgroundColor: "red"}}>111111</div>
     },
+    {
+        type: EnumWidgetType.test,
+        Widget: () => <div style={{height: 100, width: 100, backgroundColor: "green"}} onClick={() => alert(111)}>22222</div>
+    },
 ];
+
+const mapOptions = {
+    zoom: 4,
+    baseLayerTMS: "Google.Normal.Map",
+}
 
 
 const Map: React.FC = () => {
@@ -43,12 +52,7 @@ const Map: React.FC = () => {
 
     return (
         <BaseMap
-            mapType="leaflet"
-            mapOptions={{
-                zoom: 4,
-                baseLayerTMS: "Google.Normal.Map",
-            }}
-            isFixed={true}
+            mapOptions={mapOptions}
             onMapLoaded={handleMapLoaded}
         >
             {/*<QueryType />*/}

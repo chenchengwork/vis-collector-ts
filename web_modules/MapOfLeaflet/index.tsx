@@ -6,17 +6,20 @@ export const MapUtilCtx = createContext({} as MapUtil);
 export type TypeMapUtil = MapUtil;
 
 interface BaseMapProps {
-    mapType: string;
     onMapLoaded?: (realMapUtil: MapUtil) => void;
     mapOptions?: MapUtilOpts;
-    isFixed?: boolean;
-    height?: string | number;
 }
+
+const defaultStyle: React.CSSProperties = {
+    position: "relative",
+    width: "100%",
+    height: "100%"
+};
 
 /**
  * 基础地图组件
  */
-const BaseMap: React.FC<BaseMapProps> = memo(({children, mapOptions = {}, isFixed = true, height = "100%", onMapLoaded}) => {
+const BaseMap: React.FC<BaseMapProps> = memo(({children, mapOptions = {},  onMapLoaded}) => {
     const [mapUtil, setMapUtil ] = useState(null);
     const containerRef = useRef(null);
 
@@ -24,7 +27,7 @@ const BaseMap: React.FC<BaseMapProps> = memo(({children, mapOptions = {}, isFixe
         if(!mapUtil){
             const realMapUtil = new MapUtil(containerRef.current, mapOptions);
             setMapUtil(realMapUtil);
-            if(onMapLoaded) onMapLoaded(realMapUtil);
+            onMapLoaded && onMapLoaded(realMapUtil);
         }
 
         // 清理资源和副作用
@@ -33,24 +36,26 @@ const BaseMap: React.FC<BaseMapProps> = memo(({children, mapOptions = {}, isFixe
         }
     }, [mapUtil]);
 
-    const containerH = isFixed ? "100%": height;
-    const containerP = isFixed ? "fixed": "absolute";
+    const getChildren = () => {
+        if(!mapUtil) return null;
+
+        return (
+            <MapUtilCtx.Provider value={mapUtil}>
+                <div style={{position: "absolute", zIndex: 10}}>
+                    {children}
+                </div>
+            </MapUtilCtx.Provider>
+        )
+    };
 
     return (
-        <div style={{position: "relative", width: "100%", height: containerH}} >
-            <div ref={containerRef} style={{ position: containerP, zIndex: 0,width: "100%", height: containerH}}></div>
-
-            {mapUtil ?
-                <MapUtilCtx.Provider value={mapUtil}>
-                    <div style={{position: "absolute", zIndex: 10}}>
-                        {children}
-                    </div>
-                </MapUtilCtx.Provider>
-                : null
-            }
+        <div style={defaultStyle} >
+            {getChildren()}
+            <div ref={containerRef} style={{zIndex: 0, width: "100%", height: "100%"}}></div>
         </div>
     )
 });
+
 
 BaseMap.propTypes = {
     mapOptions: PropTypes.object,

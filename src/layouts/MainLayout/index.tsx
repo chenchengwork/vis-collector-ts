@@ -22,19 +22,19 @@ const MainLayout: React.FC<RouteComponentProps> = (props) => {
 
     /**
      * 获取左侧菜单宽度
-     * @param {bool} collapsed
+     * @param {bool} leftMenuCollapsed
      * @return {number}
      */
-    const getLeftMenuWidth = (collapsed: boolean) => {
+    const getLeftMenuWidth = (leftMenuCollapsed: boolean) => {
         // 是否移除左侧菜单
         const currentUrl = props.match.path;
         if(isRemoveLeftMenu(currentUrl)) return 0;
 
-        return collapsed ? 80 : 200;
+        return leftMenuCollapsed ? 80 : 200;
     };
 
-    const [collapsed, setCollapsed] = useState(!UrlToExtraInfoMap[props.match.path]);
-    const [appMenuLeftWidth, setAppMenuLeftWidth] = useState(getLeftMenuWidth(collapsed));
+    const [leftMenuCollapsed, setLeftMenuCollapsed] = useState(!UrlToExtraInfoMap[props.match.path]);
+    const [appMenuLeftWidth, setAppMenuLeftWidth] = useState(getLeftMenuWidth(leftMenuCollapsed));
 
     /**
      * 退出登录
@@ -47,16 +47,16 @@ const MainLayout: React.FC<RouteComponentProps> = (props) => {
     /**
      * 左侧菜单的收起和关闭
      */
-    const onLeftMenuCollapse = () => {
-        const newCollapsed = !collapsed;
-        setCollapsed(newCollapsed)
+    const handleLeftMenuCollapse = () => {
+        const newCollapsed = !leftMenuCollapsed;
+        setLeftMenuCollapsed(newCollapsed);
         setAppMenuLeftWidth(getLeftMenuWidth(newCollapsed))
     };
 
     const currentUrl = props.match.path;
 
     return (
-        <LayoutCtx.Provider value={{handleLeftMenuCollapse: onLeftMenuCollapse, leftMenuCollapsed: collapsed, appMenuLeftWidth, theme}}>
+        <LayoutCtx.Provider value={{handleLeftMenuCollapse, leftMenuCollapsed, appMenuLeftWidth, theme}}>
             <Layout style={{height: "100%"}}>
                 {/*头部菜单*/}
                 <MenuHeader
@@ -70,12 +70,12 @@ const MainLayout: React.FC<RouteComponentProps> = (props) => {
                     currentUrl={currentUrl}
                     leftMenu={getLeftMenu(currentUrl)}
                     leftWidth={appMenuLeftWidth}
-                    collapsed={collapsed}
-                    onLeftMenuCollapse={onLeftMenuCollapse}
+                    collapsed={leftMenuCollapsed}
+                    onLeftMenuCollapse={handleLeftMenuCollapse}
                 />
 
                 {/*内容区域*/}
-                <Layout style={{ marginLeft: getLeftMenuWidth(collapsed), height: "100%" }}>
+                <Layout style={{ marginLeft: getLeftMenuWidth(leftMenuCollapsed), height: "100%" }}>
                     {props.children}
                 </Layout>
             </Layout>
