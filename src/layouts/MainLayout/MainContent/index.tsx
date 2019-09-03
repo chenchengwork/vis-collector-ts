@@ -14,22 +14,26 @@ interface MainContentProps extends LayoutProps{
  * 内容组件
  */
 const MainContent: React.FC<MainContentProps> = ({ className = '', style = {}, children = null, isShowMainHeader = true, ...rest }) => {
+    const padding = 5;
     let defaultStyle = {
-        // margin: '0px 10px 0px 10px',
-        paddingTop: isShowMainHeader ? theme.mainHeaderHeight : 0
+        paddingTop: isShowMainHeader ? theme.headerHeight + theme.mainHeaderHeight + padding : theme.headerHeight + padding,
+        paddingLeft: padding,
+        paddingRight: padding,
+        paddingBottom: padding,
     };
 
     //language=SCSS
     const {styles, className: mainClassName} = css.resolve`
         .main-content{
              height: 100%;
-            //height: calc(100% - ${theme.mainHeaderHeight}px);
+             overflow-y: auto;
         }
-    `
+    `;
 
     return (
         <Layout.Content className={`${mainClassName} main-content ${className}`} style={Object.assign(defaultStyle, style)} {...rest}>
             {children}
+            {styles}
         </Layout.Content>
     );
 };

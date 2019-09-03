@@ -31,13 +31,11 @@ const Map: React.FC = () => {
         // mapUtil.addImageOverLayer("https://legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", [[40.712216, -74.22655], [40.773941, -74.12544]], {}, true);
 
 
-        // ------
-        // mapUtil.addWindyLayer(require("./windy_10.json"));
-
-        request.get("data/leaflet/windy/windy_10.json").then((resp) => {
-            console.log(resp);
-            mapUtil.addWindyLayer(resp.data);
-        }, (resp) => console.log(resp.msg))
+        // ------添加风场------
+        // request.get("data/leaflet/windy/windy_10.json").then((resp) => {
+        //     console.log(resp);
+        //     mapUtil.addWindyLayer(resp.data);
+        // }, (resp) => console.log(resp.msg))
 
     };
     const widgetStore = new WidgetStore(EnumWidgetData);
