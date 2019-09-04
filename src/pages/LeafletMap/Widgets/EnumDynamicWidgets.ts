@@ -1,7 +1,6 @@
 import {EnumWidgetType} from "../constants";
 import { LeftBar } from './Business';
 
-
 export default [
     {
         type: EnumWidgetType.mapControlBar,

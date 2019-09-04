@@ -36,25 +36,13 @@ const BaseMap: React.FC<BaseMapProps> = memo(({children, mapOptions = {},  onMap
         }
     }, [mapUtil]);
 
-    const getChildren = () => {
-        if(!mapUtil) return null;
-
-        return (
-            <MapUtilCtx.Provider value={mapUtil}>
-                {/*<div style={{position: "absolute", zIndex: 10}}>*/}
-                    {children}
-                {/*</div>*/}
-            </MapUtilCtx.Provider>
-        )
-    };
-
     return (
         <div style={defaultStyle}>
             <div style={{zIndex: 0, width: "100%", height: "100%", position: "absolute"}}>
                 <div ref={containerRef} style={{zIndex: 0, width: "100%", height: "100%"}}></div>
             </div>
 
-            {getChildren()}
+            {mapUtil ?  <MapUtilCtx.Provider value={mapUtil}>{children}</MapUtilCtx.Provider> : null}
         </div>
     )
 });

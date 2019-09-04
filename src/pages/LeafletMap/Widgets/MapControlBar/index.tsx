@@ -1,6 +1,7 @@
 import React from 'react';
 import { TypeMapUtil } from '#/MapOfLeaflet';
 import MouseToolMenu from './MouseToolMenu';
+import BaseMapMenu from './BaseMapMenu';
 
 const MapControlBar: React.FC<{mapUtil: TypeMapUtil}> = ({mapUtil}) => {
     const { mouseTool } = mapUtil;
@@ -18,6 +19,10 @@ const MapControlBar: React.FC<{mapUtil: TypeMapUtil}> = ({mapUtil}) => {
             <MouseToolMenu mapUtil={mapUtil}>
                 <div className="item">绘图</div>
             </MouseToolMenu>
+            <div className="line" />
+            <BaseMapMenu mapUtil={mapUtil}>
+                <div className="item">底图</div>
+            </BaseMapMenu>
 
             {/*language=SCSS*/}
             <style jsx>{`

@@ -5,7 +5,7 @@ import { request } from '@/utils/T';
 const LeftBar: React.FC<{mapUtil: TypeMapUtil}> = ({ mapUtil }) => {
 
     return (
-        <div className="map-control">
+        <div className="left-bar">
             <div className="item" onClick={() => mapUtil.addImageOverLayer("https://legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", [[40.712216, -74.22655], [40.773941, -74.12544]], {}, true)}>贴图</div>
             <div className="line" />
             <div
@@ -20,7 +20,7 @@ const LeftBar: React.FC<{mapUtil: TypeMapUtil}> = ({ mapUtil }) => {
 
             {/*language=SCSS*/}
             <style jsx>{`
-                .map-control{
+                .left-bar{
                     display: flex;
                     flex-flow: column;
                     align-items: center;

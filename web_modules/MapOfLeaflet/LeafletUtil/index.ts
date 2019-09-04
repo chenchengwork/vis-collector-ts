@@ -50,7 +50,7 @@ const triggerClearMapCb = () => {
 };
 
 export interface LeafletMapUtilOpts extends L.MapOptions{
-    baseLayerTMS?: string;
+    baseLayerTMS?: string | string[];
 }
 
 
@@ -78,7 +78,9 @@ export default class LeafletUtil {
         this.containerDom = idOrHTMLElement instanceof HTMLElement ? idOrHTMLElement : document.querySelector(`#${idOrHTMLElement}`);
         this.baseLayers = [];
         if(options.baseLayerTMS) {
-            this.baseLayers.push(tileServiceProvider(options.baseLayerTMS, ZOOM))
+            this.baseLayers.push(tileServiceProvider(options.baseLayerTMS as string, ZOOM));
+        } else if(Array.isArray(options.baseLayerTMS)){
+            this.baseLayers = options.baseLayerTMS.map((type) => tileServiceProvider(type));
         }else {
             this.baseLayers = [tileServiceProvider('Geoq.Normal.Map', ZOOM)];
         }
@@ -135,12 +137,21 @@ export default class LeafletUtil {
      * 更新底图
      * @param type
      */
-    updateBaseMap = (type: string) => {
+    updateBaseMap = (type: string | string[]) => {
         try {
-            const layer = this.baseLayers[0];
-            const tmsUrl = getTmsUrlByType(type);
+            // const layer = this.baseLayers[0];
+            // const tmsUrl = getTmsUrlByType(type);
+            // layer && layer.setUrl(tmsUrl);
 
-            layer && layer.setUrl(tmsUrl);
+            this.baseLayers.map(layer => layer.remove());
+            this.baseLayers = [];
+
+            (Array.isArray(type) ? type : [type]).forEach(a => {
+                const layer = tileServiceProvider(a);
+                this.map.addLayer(layer);
+                this.baseLayers.push(layer);
+            })
+
         }catch (e) {
             console.error(e);
         }
@@ -176,14 +187,10 @@ export default class LeafletUtil {
      */
     zoomOut = () => this.map.zoomOut();
 
-
     /**
      * 重置
      */
-    reset = (zoom?: number) => {
-        this.map.flyTo(CENTER, zoom || ZOOM.minZoom);
-    }
-
+    reset = (zoom?: number) => this.map.flyTo(CENTER, zoom || ZOOM.minZoom);
 
 	/**
 	 * 绑定清除地图的回调

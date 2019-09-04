@@ -16,12 +16,12 @@ import EnumRouter from '@/constants/EnumRouter';
 const routes = [
     {
         uri: EnumRouter.leaflet,
-        component: import("@/pages/leaflet"),
+        component: import("@/pages/LeafletMap"),
         stores: {}
     },
     {
         uri: EnumRouter.mapboxgl,
-        component: import("@/pages/mapboxgl"),
+        component: import("@/pages/MapboxglMap"),
         stores: {}
     },
 ];
