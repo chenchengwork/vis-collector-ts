@@ -1,6 +1,6 @@
-import LeafletUtil, { LeafletMapUtilOpts } from './LeafletUtil';
+import LeafletUtil, { LeafletUtilOpts } from './LeafletUtil';
 
-export interface MapUtilOpts extends  LeafletMapUtilOpts{}
+export interface MapUtilOpts extends  LeafletUtilOpts{}
 
 export default class MapUtil extends LeafletUtil{
 

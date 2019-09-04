@@ -6,7 +6,7 @@ const LeftBar: React.FC<{mapUtil: TypeMapUtil}> = ({ mapUtil }) => {
 
     return (
         <div className="left-bar">
-            <div className="item" onClick={() => mapUtil.addImageOverLayer("https://legacy.lib.utexas.edu/maps/historical/newark_nj_1922.jpg", [[40.712216, -74.22655], [40.773941, -74.12544]], {}, true)}>贴图</div>
+            <div className="item" onClick={() => mapUtil.addImageOverLayer("/data/leaflet/img/newark_nj_1922.jpg", [[40.712216, -74.22655], [40.773941, -74.12544]], {}, true)}>贴图</div>
             <div className="line" />
             <div
                 className="item"

@@ -23,6 +23,8 @@ const MapControlBar: React.FC<{mapUtil: TypeMapUtil}> = ({mapUtil}) => {
             <BaseMapMenu mapUtil={mapUtil}>
                 <div className="item">底图</div>
             </BaseMapMenu>
+            <div className="line" />
+            <div className="item" onClick={() => mapUtil.clearMap()}>清空</div>
 
             {/*language=SCSS*/}
             <style jsx>{`

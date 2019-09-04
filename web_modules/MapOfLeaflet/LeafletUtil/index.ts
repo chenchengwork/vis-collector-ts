@@ -31,27 +31,26 @@ import "./extend/windyVelocity";
 // // 加载地理编码工具
 // import GeoCoder from './GeoCoder';
 
-// 加载mapUtil枚举文件
-import { ZOOM, CENTER } from './constants';
-
-/**
- * 记录清除地图回调函数
- * @type {Map<any, any>}
- */
-let cacheClearCallBack = new Map();
-
-/**
- * 触发清除地图回调
- */
-const triggerClearMapCb = () => {
-	for(let [cb, {params, context}] of cacheClearCallBack.entries()) {
-		cb.apply(context, params);
-	}
-};
-
-export interface LeafletMapUtilOpts extends L.MapOptions{
+export interface LeafletUtilOpts extends L.MapOptions{
     baseLayerTMS?: string | string[];
 }
+
+const isUndefined = (data: any) => data === undefined;
+
+/**
+ * 组装基础TMS Layer
+ * @param baseLayerTMS
+ * @param ZOOM
+ */
+const assembleBaseTmsLayers = (baseLayerTMS: string | string[], ZOOM: {maxZoom: number; minZoom: number}) => {
+    let baseLayers: L.TileLayer[] = [];
+    if(Array.isArray(baseLayerTMS)){
+        baseLayers = baseLayerTMS.map((type) => tileServiceProvider(type));
+    }else {
+        baseLayers.push(tileServiceProvider(baseLayerTMS, ZOOM));
+    }
+    return baseLayers;
+};
 
 
 /**
@@ -59,13 +58,15 @@ export interface LeafletMapUtilOpts extends L.MapOptions{
  */
 export default class LeafletUtil {
     map: L.Map;
+    mouseTool: MouseTool;
     protected containerDom: HTMLElement;
     protected baseLayers: L.TileLayer[];
-    mouseTool: MouseTool;
-
-    static G = {
-        L,
-        ZOOM
+    private _cacheData = {
+        clearMapCallback: new Map(),                // 存储清空地图的回调方法
+        center: [28.9, 128.9] as L.LatLngTuple,     // 中心点
+        maxZoom: 28,                                // 地图最大level
+        minZoom: 4,                                 // 地图最小level
+        zoom: 4,                                    // 地图初始level
     };
 
     /**
@@ -74,27 +75,26 @@ export default class LeafletUtil {
      * @param {Object} options  地图配置 https://leafletjs.com/reference-1.4.0.html#map-option
      * @returns {null|*}
      */
-    constructor(idOrHTMLElement: string | HTMLElement, options: LeafletMapUtilOpts = {}) {
+    constructor(idOrHTMLElement: string | HTMLElement, options: LeafletUtilOpts = {}) {
         this.containerDom = idOrHTMLElement instanceof HTMLElement ? idOrHTMLElement : document.querySelector(`#${idOrHTMLElement}`);
-        this.baseLayers = [];
-        if(options.baseLayerTMS) {
-            this.baseLayers.push(tileServiceProvider(options.baseLayerTMS as string, ZOOM));
-        } else if(Array.isArray(options.baseLayerTMS)){
-            this.baseLayers = options.baseLayerTMS.map((type) => tileServiceProvider(type));
-        }else {
-            this.baseLayers = [tileServiceProvider('Geoq.Normal.Map', ZOOM)];
-        }
+        // 设置缓存数据
+        this._setCacheData(options);
+        const { zoom, maxZoom, minZoom, center } = this._cacheData;
+
+        this.baseLayers = assembleBaseTmsLayers(options.baseLayerTMS || 'Geoq.Normal.Map', {maxZoom, minZoom});
 
         this.map = L.map(this.containerDom, Object.assign({
             attributionControl: false,      // 去掉leaflet的标识
             crs: L.CRS.EPSG3857,             // 墨卡托投影
             // crs:L.CRS.EPSG4326,          // 经纬度投影
-            center: CENTER,
-            zoom: ZOOM.minZoom,
+            center: center,
+            zoom,
+            maxZoom,
+            minZoom,
             layers: this.baseLayers,
             zoomControl: false,
             doubleClickZoom: false,
-            renderer: L.canvas()
+            renderer: L.canvas(),
             // renderer: L.svg()
         }, options));
 
@@ -104,6 +104,19 @@ export default class LeafletUtil {
         // 地理编码工具
         // this.geoCoder = new GeoCoder();
     }
+
+    /**
+     * 设置缓存数据
+     * @param opts
+     * @private
+     */
+    private _setCacheData = (opts: LeafletUtilOpts) => {
+        const { zoom, maxZoom, minZoom, center } = opts;
+        if(!isUndefined(center)) this._cacheData.center = center as L.LatLngTuple;
+        if(!isUndefined(zoom)) this._cacheData.zoom = zoom;
+        if(!isUndefined(maxZoom)) this._cacheData.zoom = maxZoom;
+        if(!isUndefined(minZoom)) this._cacheData.zoom = minZoom;
+    };
 
     /**
      * 将*addLayer方法转换成setLayer方法
@@ -125,8 +138,11 @@ export default class LeafletUtil {
      */
     isBaseMapType = (type: string) => {
         try {
-            // @ts-ignore
-            return this.baseLayers[0]._url == getTmsUrlByType(type)
+            for(let i = 0; i < this.baseLayers.length; i++){
+                // @ts-ignore
+                if(this.baseLayers[i]._url == getTmsUrlByType(type)) return true;
+            }
+            return false;
         }catch (e) {
             console.error(e);
             return false;
@@ -139,19 +155,21 @@ export default class LeafletUtil {
      */
     updateBaseMap = (type: string | string[]) => {
         try {
-            // const layer = this.baseLayers[0];
-            // const tmsUrl = getTmsUrlByType(type);
-            // layer && layer.setUrl(tmsUrl);
+            const newTypes = Array.isArray(type) ? type : [type];
+            const maxCount = Math.max(newTypes.length, this.baseLayers.length);
 
-            this.baseLayers.map(layer => layer.remove());
-            this.baseLayers = [];
-
-            (Array.isArray(type) ? type : [type]).forEach(a => {
-                const layer = tileServiceProvider(a);
-                this.map.addLayer(layer);
-                this.baseLayers.push(layer);
-            })
-
+            for(let i = 0; i < maxCount; i++){
+                if(this.baseLayers[i] && newTypes[i]){
+                    this.baseLayers[i].setUrl(getTmsUrlByType(newTypes[i]))
+                }else if(newTypes[i] && !this.baseLayers[i]){
+                    const layer = tileServiceProvider(newTypes[i]);
+                    this.baseLayers.push(layer);
+                    this.map.addLayer(layer);
+                }else if(!newTypes[i] && this.baseLayers[i]){
+                    this.baseLayers[i].remove();
+                    this.baseLayers.splice(i, 1);
+                }
+            }
         }catch (e) {
             console.error(e);
         }
@@ -162,17 +180,6 @@ export default class LeafletUtil {
      */
     destroy = () => {
         this.map.remove();
-    };
-
-    /**
-     * 获取公共数据
-     * @return {{center: number[], zoomRange: {maxZoom: number, minZoom: number}}}
-     */
-    getCommonData = () => {
-        return {
-            zoomRange: ZOOM,
-            center: CENTER
-        }
     };
 
     /**
@@ -190,7 +197,10 @@ export default class LeafletUtil {
     /**
      * 重置
      */
-    reset = (zoom?: number) => this.map.flyTo(CENTER, zoom || ZOOM.minZoom);
+    reset = (zoom?: number) => {
+        const { center, minZoom } = this._cacheData;
+        this.map.flyTo(center, zoom || minZoom);
+    };
 
 	/**
 	 * 绑定清除地图的回调
@@ -199,7 +209,7 @@ export default class LeafletUtil {
 	 * @param {Object} context 上下文
 	 */
 	onClearMap = <T>(cb = () => {}, params:T[] = [], context: Function) => {
-		cacheClearCallBack.set(cb, { params: Array.isArray(params) ? params : [params], context });
+		this._cacheData.clearMapCallback.set(cb, { params: Array.isArray(params) ? params : [params], context });
 	}
 
 	/**
@@ -207,10 +217,10 @@ export default class LeafletUtil {
 	 * @param cb
 	 */
 	offClearMap = (cb: Function) =>{
-		if (cacheClearCallBack.has(cb)) {
-			cacheClearCallBack.delete(cb);
+		if (this._cacheData.clearMapCallback.has(cb)) {
+            this._cacheData.clearMapCallback.delete(cb);
 		}
-	}
+	};
 
     /**
      * 清空地图
@@ -222,14 +232,17 @@ export default class LeafletUtil {
 
         setTimeout(() => {
             this.map.eachLayer((layer) => {
-                if (keepLayers.indexOf(layer) === -1) {
+                if ((layer instanceof L.TileLayer && !this.baseLayers.includes(layer)) && !keepLayers.includes(layer)) {
                     layer.remove();
                 }
             });
 
-            triggerClearMapCb();
+            // 触发清空地图的回调方法
+            for(let [cb, {params, context}] of this._cacheData.clearMapCallback.entries()) {
+                cb.apply(context, params);
+            }
         }, 0)
-    }
+    };
 
     /**
      * 添加图片覆盖物
