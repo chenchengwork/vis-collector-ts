@@ -1,7 +1,9 @@
 import React from 'react';
 import { TypeMapUtil } from '#/MapOfLeaflet';
+import MouseToolMenu from './MouseToolMenu';
 
 const MapControlBar: React.FC<{mapUtil: TypeMapUtil}> = ({mapUtil}) => {
+    const { mouseTool } = mapUtil;
 
     return (
         <div className="map-control">
@@ -10,6 +12,12 @@ const MapControlBar: React.FC<{mapUtil: TypeMapUtil}> = ({mapUtil}) => {
             <div className="item" onClick={() => mapUtil.zoomOut()}>缩小</div>
             <div className="line" />
             <div className="item" onClick={() => mapUtil.reset()}>重置</div>
+            <div className="line" />
+            <div className="item" onClick={() => mouseTool.measure.start()}>测距</div>
+            <div className="line" />
+            <MouseToolMenu mapUtil={mapUtil}>
+                <div className="item">绘图</div>
+            </MouseToolMenu>
 
             {/*language=SCSS*/}
             <style jsx>{`

@@ -61,7 +61,7 @@ export const mountReact = (component: React.ReactElement) => {
     ReactDOM.unmountComponentAtNode(domObject);
 
     ReactDOM.render(
-        React.createElement(ConfigProvider, {locale: zhCN}, [component]),
+        React.createElement(ConfigProvider, {locale: zhCN}, component),
         domObject
     );
 };

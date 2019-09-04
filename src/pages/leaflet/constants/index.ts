@@ -4,7 +4,7 @@
  */
 export const EnumWidgetType = {
     mapControlBar: "mapControlBar",           // 地图控制按钮
-    test: "test",                           // 高度轴
+    leftBar: "leftBar",                           // 高度轴
 };
 
 /**
@@ -32,13 +32,13 @@ export const EnumWidget = {
         },
         widgetParams: {}
     },
-    // [EnumWidgetType.test]: {
-    //     containerProps: {
-    //         position: {rightX: 0, bottomY: 0},
-    //         isAllowDrag: true,
-    //     },
-    //     widgetParams: {}
-    // },
+    [EnumWidgetType.leftBar]: {
+        containerProps: {
+            position: {leftX: 30, topY: 50},
+            isShowClose: false,
+        },
+        widgetParams: {}
+    },
 };
 
 
