@@ -48,8 +48,7 @@ interface MapBounds{
     height: number;
 };
 
-interface Params {
-    canvas: HTMLCanvasElement;
+interface InitParams {
     data: UV[];
     minVelocity?: number;
     maxVelocity?: number;
@@ -60,6 +59,10 @@ interface Params {
     devicePixelRatio?: number;
     frameRate?: number;
     colorScale?: string | string[];
+}
+
+interface Params extends  InitParams{
+    canvas: HTMLCanvasElement;
 }
 
 interface UVHeader {
@@ -79,9 +82,10 @@ interface UV {
 }
 
 export { Params };
+export { InitParams };
 export { UV };
 
-const Index = function(params: Params){
+const Windy = function(params: Params){
 
     const formatConfig = (params: Params) => {
 
@@ -541,7 +545,7 @@ if(!window.cancelAnimationFrame) {
     };
 }
 
-export default Index;
+export default Windy;
 
 
 const createMask = (width: number, height: number) => {

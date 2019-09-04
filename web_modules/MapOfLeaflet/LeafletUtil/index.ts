@@ -4,14 +4,14 @@ import * as geojson from 'geojson';
 import IconMarker from './img/marker.png';
 
 // 加载切片服务配置
-// import "./extend/tileServiceProvider";
 import {providers, getTmsUrlByType, tileServiceProvider} from "./extend/tileServiceProvider";
-// import "./extend/NonTiledLayer.WCS";
-//
-// // 加载鼠标工具
+
+// 加载鼠标工具
 import MouseTool from './extend/mouseTool';
-// // 加载风速layer
-import "./extend/windyVelocity";
+
+// 加载风速layer
+import { getWindyVelocityLayer, WindData } from './extend/windyVelocityLayer';
+import {UV} from "#/MapOfLeaflet/LeafletUtil/lib/Windy";
 
 //
 // // 加载风速tif layer
@@ -473,14 +473,18 @@ export default class LeafletUtil {
      * @param {Object} opts
      * @returns {*}
      */
-    addWindyLayer(windData, opts = {}) {
-        const windyVelocityLayer = L.windyVelocityLayer(Object.assign({
+    addWindyLayer(windData: WindData, opts = {}) {
+        const params = Object.assign({
             crs: L.CRS.EPSG3857,
-            data: windData,
-            velocityScale: 0.005,    // 调整风速大小
-        }, opts)).addTo(this.map);
+            windyParams: {
+                data: windData,
+                velocityScale: 0.005,    // 调整风速大小
+            }
+        }, opts);
 
-        return windyVelocityLayer
+        const layer = getWindyVelocityLayer(params).addTo(this.map);
+        // layer.setData()
+        return layer
     }
 
     /**
