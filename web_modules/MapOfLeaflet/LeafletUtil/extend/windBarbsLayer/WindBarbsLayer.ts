@@ -1,16 +1,11 @@
 import L from 'leaflet';
 import WindBarbs from '../../lib/WindBarbs';
-import { formatUrlParams } from '../../lib/helper';
 import CanvasLayer from '../../lib/CanvasLayer';
 
-const WindBarbsTiffLayer = (L.Layer ? L.Layer : L.Class).extend({
+const WindBarbsLayer = (L.Layer ? L.Layer : L.Class).extend({
     options: {
         url: "",
-        windyOpts: {
-            maxVelocity: 10, // used to align color scale
-            colorScale: null,
-            data: null
-        }
+        getWindBarsData: () => {}
     },
 
     _map: null,
@@ -36,17 +31,6 @@ const WindBarbsTiffLayer = (L.Layer ? L.Layer : L.Class).extend({
         this._destroyWind();
     },
 
-    setData: function setData(data) {
-        this.options.data = data;
-
-        if (this._windBarbs) {
-            this._windBarbs.setData(data);
-            this._clearAndRestart();
-        }
-
-        this.fire('load');
-    },
-
     setOptions: function (options = {}){
         // @ts-ignore
         L.setOptions(this, Object.assign(this.options, options));
@@ -55,7 +39,6 @@ const WindBarbsTiffLayer = (L.Layer ? L.Layer : L.Class).extend({
 
     onDrawLayer: function() {
         const self = this;
-
         if (!this._windBarbs) {
             this._initWindy();
             return;
@@ -68,56 +51,23 @@ const WindBarbsTiffLayer = (L.Layer ? L.Layer : L.Class).extend({
         }, 0); // showing velocity is delayed
     },
 
-
     _startWindBarbs: function() {
         const self = this;
-        let { url } = self.options;
+        let { getWindBarsData } = self.options;
         const bounds = self._map.getBounds();
         const size = self._map.getSize();
 
-        // url = formatUrlParams(
-        //     url.replace("{z}", self._map.getZoom()),
-        //     Object.assign(
-        //         {
-        //             bbox: `${bounds._southWest.lng},${bounds._southWest.lat},${bounds._northEast.lng},${bounds._northEast.lat}`,
-        //             // bbox: "",
-        //         }
-        //     )
-        // );
-
-        const draw = (windData, image) =>{
-            self._windBarbs.render({
+        getWindBarsData(this._map, (params: {imgW: number; imgH: number; geoTransform: number[]; data: [number[], number[]]}) => {
+            self._windBarbs.render(Object.assign({
                 barbSize: 30,
                 canvasW: size.x,
                 canvasH: size.y,
-                imgW: image.getWidth(),
-                imgH: image.getHeight(),
-                geoTransform: (() => {
-                    const tiepoint = image.getTiePoints()[0];
-                    const pixelScale = image.getFileDirectory().ModelPixelScale;
-                    // console.log('tiepoint->', tiepoint)
-                    // console.log('pixelScale->', pixelScale)
-                    const geoTransform = [tiepoint.x, pixelScale[0], 0, tiepoint.y, 0, -1 * pixelScale[1]];
-                    return geoTransform;
-                })(),
-                data: windData,
                 extent: [
                     [bounds._southWest.lng, bounds._southWest.lat],
                     [bounds._northEast.lng, bounds._northEast.lat]
                 ]
-            });
-        };
-
-        getWindDataByTif(url).then(({imageData, image}) => {
-            console.log('fetch imageData->', imageData);
-
-            self.imageData = [imageData[0], imageData[1]];
-            self.tifImage = image;
-
-            if(!self._windBarbs) return false;
-            draw(imageData, image);
-
-        }).catch((e) => console.error(e));
+            }, params));
+        })
     },
 
 
@@ -161,31 +111,5 @@ const WindBarbsTiffLayer = (L.Layer ? L.Layer : L.Class).extend({
     }
 });
 
-export default (options) => new WindBarbsTiffLayer(options)
+export default WindBarbsLayer
 
-const getWindDataByTif = (tifUrl: string) => {
-    const GeoTIFF = require('geotiff/src/main');
-    const fetch = require("../../lib/fetch").default;
-
-    return new Promise((resolve, reject) => {
-        fetch(tifUrl)
-            .then((response) => response.arrayBuffer())
-            .then((arrayBuffer) => GeoTIFF.fromArrayBuffer(arrayBuffer))
-            .then((tif) => tif.getImage())
-            .then((image) => {
-                image.readRasters({
-                    pool: new GeoTIFF.Pool(),   // 使用web-worker
-                    samples: [0,1],
-                    // window: [0, 0, image.getWidth() - 300, image.getHeight()- 300],
-                }).then((imageData) => {
-                    resolve({imageData, image});
-                }).catch(e => {
-                    reject(e);
-                })
-            })
-            .catch((e) => {
-                reject(e);
-            });
-    })
-
-}

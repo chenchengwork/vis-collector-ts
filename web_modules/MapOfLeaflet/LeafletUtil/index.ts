@@ -11,17 +11,13 @@ import MouseTool from './extend/mouseTool';
 
 // 加载风速layer
 import { getWindyVelocityLayer, WindData } from './extend/windyVelocityLayer';
-import {UV} from "#/MapOfLeaflet/LeafletUtil/lib/Windy";
 
-//
-// // 加载风速tif layer
-// import { windyTiffVelocityLayer } from "./extend/windyTiffVelocity";
-//
+// 加载风向杆layer
+import { getWindBarsTiffLayer } from "./extend/windBarbsLayer";
+
+
 // import windyGlVelocity from './extend/windyGlVelocity';
-//
-// // 加载风向杆layer
-import { windBarbsTiffLayer } from "./extend/windBarbsTiffLayer";
-//
+
 // // 加载要素tif layer
 // import elementTileTifLayer from "./extend/elementTileTifLayer";
 //
@@ -544,13 +540,8 @@ export default class LeafletUtil {
      * 添加风向杆
      * @returns {*}
      */
-    addWindBarbsByTifLayer = (url, urlParams = {}) => {
-
-        const layer = windBarbsTiffLayer({
-            url,
-            urlParams,
-        }).addTo(this.map);
-
+    addWindBarbsByTifLayer = (url: string, urlParams = {}) => {
+        const layer = getWindBarsTiffLayer(url).addTo(this.map);
         return layer
     };
 
