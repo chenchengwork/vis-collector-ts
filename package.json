@@ -36,7 +36,8 @@
     "core-js": "^3.1.4",
     "styled-jsx-plugin-sass": "^1.0.0",
     "typescript": "^3.6.2",
-    "webpack-pipe": "^1.0.16"
+    "webpack-pipe": "^1.0.16",
+    "worker-loader": "^2.0.0"
   },
   "repository": {
     "type": "git",

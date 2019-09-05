@@ -1,2 +1,0 @@
-export windBarbsTiffLayer from './WindBarbsTiffLayer';
-

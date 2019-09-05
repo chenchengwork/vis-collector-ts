@@ -13,7 +13,7 @@ const isUndefined = (data) => data === undefined;
  */
 const isNull = (data) => data === null;
 
-export default class Index {
+export default class WindBarbs {
     /**
      *
      * @param {Object} opts
@@ -155,26 +155,26 @@ const drawBarbs = (params) => {
 }
 
 // 绘制风向箭头 http://geoexamples.com/d3-raster-tools-docs/code_samples/wind-arrows-page.html
-const drawArrows = (params) => {
-    const { context, x, y, barbSize, angle, spd5, spd10, spd50 } = params;
-
-    context.save();
-    context.translate(x, y);
-    context.rotate(angle);
-    context.scale(sizeScale(spd), sizeScale(spd));
-    context.beginPath();
-    context.strokeStyle = "#444";
-    context.fillStyle = colorScale(spd);
-
-    context.moveTo(-arrowSize/2,0);
-    context.lineTo(arrowSize/5,arrowSize/6);
-    context.lineTo(arrowSize/5,arrowSize/3);
-    context.lineTo(arrowSize/2,0);
-    context.lineTo(arrowSize/5,-arrowSize/3);
-    context.lineTo(arrowSize/5,-arrowSize/6);
-    context.lineTo(-arrowSize/2,0);
-
-    context.stroke();
-    context.fill();
-    context.restore();
-}
+// const drawArrows = (params) => {
+//     const { context, x, y, barbSize, angle, spd5, spd10, spd50 } = params;
+//
+//     context.save();
+//     context.translate(x, y);
+//     context.rotate(angle);
+//     context.scale(sizeScale(spd), sizeScale(spd));
+//     context.beginPath();
+//     context.strokeStyle = "#444";
+//     context.fillStyle = colorScale(spd);
+//
+//     context.moveTo(-arrowSize/2,0);
+//     context.lineTo(arrowSize/5,arrowSize/6);
+//     context.lineTo(arrowSize/5,arrowSize/3);
+//     context.lineTo(arrowSize/2,0);
+//     context.lineTo(arrowSize/5,-arrowSize/3);
+//     context.lineTo(arrowSize/5,-arrowSize/6);
+//     context.lineTo(-arrowSize/2,0);
+//
+//     context.stroke();
+//     context.fill();
+//     context.restore();
+// }

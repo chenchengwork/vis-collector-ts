@@ -20,7 +20,7 @@ import {UV} from "#/MapOfLeaflet/LeafletUtil/lib/Windy";
 // import windyGlVelocity from './extend/windyGlVelocity';
 //
 // // 加载风向杆layer
-// import { windBarbsTiffLayer } from "./extend/windBarbsTiffLayer";
+import { windBarbsTiffLayer } from "./extend/windBarbsTiffLayer";
 //
 // // 加载要素tif layer
 // import elementTileTifLayer from "./extend/elementTileTifLayer";
@@ -540,18 +540,20 @@ export default class LeafletUtil {
     //  */
     // setWindyGlVelocity = this.getSetLayerFN(this.addWindyGlVelocity);
 
-    // /**
-    //  * 添加风向杆
-    //  * @returns {*}
-    //  */
-    // addWindBarbsByTifLayer = (url, urlParams = {}) => {
-    //     const layer = windBarbsTiffLayer({
-    //         url,
-    //         urlParams,
-    //     }).addTo(this.map);
-    //
-    //     return layer
-    // };
+    /**
+     * 添加风向杆
+     * @returns {*}
+     */
+    addWindBarbsByTifLayer = (url, urlParams = {}) => {
+
+        const layer = windBarbsTiffLayer({
+            url,
+            urlParams,
+        }).addTo(this.map);
+
+        return layer
+    };
+
     //
     // /**
     //  * 设置风向杆 tif

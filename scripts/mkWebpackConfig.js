@@ -50,6 +50,41 @@ const styledJsx = (config) => {
     return config;
 };
 
+
+/**
+ * 解决web-worker的加载问题
+ * 依赖包"worker-loader",
+ * 当前改loader被应用的包有:
+ * geotiff
+ * @param config
+ */
+const workerLoader = (config) => {
+    const isProduction = (process.env.NODE_ENV === 'production');
+
+    return depend.merge({
+        module: {
+            rules: [
+                {
+                    test: /\.worker\.js$/,
+                    use: {
+                        loader: 'worker-loader',
+                        options: {
+                            name: isProduction ? '[hash].decoder.worker.min.js' : '[hash].decoder.worker.js',
+                            inline: true,
+                            fallback: true,
+                        },
+                    },
+                }
+            ]
+        },
+        // node: {
+        //     fs: 'empty',
+        //     buffer: 'empty',
+        //     http: 'empty',
+        // },
+    }, config)
+}
+
 /**
  * 组装webpack config
  * @return {*}
@@ -58,6 +93,7 @@ module.exports = (pipeNodes = []) => {
     const config = assemble([
         ...pipeNodes,
         styledJsx,
+        workerLoader,
         pipe.base,
         pipe.staticResource,
         pipe.css,

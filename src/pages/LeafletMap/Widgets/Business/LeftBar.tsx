@@ -16,6 +16,16 @@ const LeftBar: React.FC<{mapUtil: TypeMapUtil}> = ({ mapUtil }) => {
                     }, (resp) => console.error(resp.msg))
                 }}
             >风场</div>
+            <div className="line" />
+            <div
+                className="item"
+                onClick={() => {
+                    mapUtil.addWindBarbsByTifLayer("data/leaflet/windy/u_5_x.tif", {})
+                    // request.get("data/leaflet/windy/u_5_x.tif").then((resp) => {
+                    //     mapUtil.addWindyLayer(resp.data);
+                    // }, (resp) => console.error(resp.msg))
+                }}
+            >风向杆</div>
 
 
             {/*language=SCSS*/}

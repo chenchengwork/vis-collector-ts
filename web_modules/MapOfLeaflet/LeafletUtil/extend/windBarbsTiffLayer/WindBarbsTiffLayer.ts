@@ -25,18 +25,20 @@ const WindBarbsTiffLayer = (L.Layer ? L.Layer : L.Class).extend({
     _timer: 0,
     _mouseControl: null,
 
-    initialize: function(options) {
+    initialize: function(options: L.LayerOptions) {
+
+        // @ts-ignore
         L.setOptions(this, options);
     },
 
-    onAdd: function(map) {
+    onAdd: function(map: L.Map) {
         // create canvas, add overlay control
         this._canvasLayer = new CanvasLayer().delegate(this);
         this._canvasLayer.addTo(map);
         this._map = map;
     },
 
-    onRemove: function(map) {
+    onRemove: function(map: L.Map) {
         this._destroyWind();
     },
 
@@ -52,12 +54,14 @@ const WindBarbsTiffLayer = (L.Layer ? L.Layer : L.Class).extend({
     },
 
     setOptions: function (options = {}){
+
+        // @ts-ignore
         L.setOptions(this, Object.assign(this.options, options));
         this._clearAndRestart();
     },
 
-    /*------------------------------------ PRIVATE ------------------------------------------*/
-    onDrawLayer: function(overlay, params) {
+
+    onDrawLayer: function() {
         const self = this;
 
         if (!this._windBarbs) {
@@ -137,6 +141,9 @@ const WindBarbsTiffLayer = (L.Layer ? L.Layer : L.Class).extend({
 
         }).catch((e) => console.error(e));
     },
+
+
+    /*------------------------------------ PRIVATE ------------------------------------------*/
 
     _initWindy: function(self) {
         // windy object, copy options
