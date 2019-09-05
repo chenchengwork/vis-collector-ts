@@ -4,13 +4,8 @@ import { formatUrlParams } from '../../lib/helper';
 import CanvasLayer from '../../lib/CanvasLayer';
 
 const WindBarbsTiffLayer = (L.Layer ? L.Layer : L.Class).extend({
-    oldTime: null,
-    fetching: false,
     options: {
         url: "",
-        urlParams:{
-
-        },
         windyOpts: {
             maxVelocity: 10, // used to align color scale
             colorScale: null,
@@ -26,7 +21,6 @@ const WindBarbsTiffLayer = (L.Layer ? L.Layer : L.Class).extend({
     _mouseControl: null,
 
     initialize: function(options: L.LayerOptions) {
-
         // @ts-ignore
         L.setOptions(this, options);
     },
@@ -54,18 +48,16 @@ const WindBarbsTiffLayer = (L.Layer ? L.Layer : L.Class).extend({
     },
 
     setOptions: function (options = {}){
-
         // @ts-ignore
         L.setOptions(this, Object.assign(this.options, options));
         this._clearAndRestart();
     },
 
-
     onDrawLayer: function() {
         const self = this;
 
         if (!this._windBarbs) {
-            this._initWindy(this);
+            this._initWindy();
             return;
         }
 
@@ -79,23 +71,19 @@ const WindBarbsTiffLayer = (L.Layer ? L.Layer : L.Class).extend({
 
     _startWindBarbs: function() {
         const self = this;
-        let { url, urlParams } = self.options;
+        let { url } = self.options;
         const bounds = self._map.getBounds();
         const size = self._map.getSize();
 
-        url = formatUrlParams(
-            url.replace("{z}", self._map.getZoom()),
-            // url.replace("{z}", 4),
-            Object.assign(
-                urlParams,
-                {
-                    bbox: `${bounds._southWest.lng},${bounds._southWest.lat},${bounds._northEast.lng},${bounds._northEast.lat}`,
-                    // bbox: "",
-                }
-            )
-        );
-
-        // url = "data/u_5_x.tif";
+        // url = formatUrlParams(
+        //     url.replace("{z}", self._map.getZoom()),
+        //     Object.assign(
+        //         {
+        //             bbox: `${bounds._southWest.lng},${bounds._southWest.lat},${bounds._northEast.lng},${bounds._northEast.lat}`,
+        //             // bbox: "",
+        //         }
+        //     )
+        // );
 
         const draw = (windData, image) =>{
             self._windBarbs.render({
@@ -109,7 +97,7 @@ const WindBarbsTiffLayer = (L.Layer ? L.Layer : L.Class).extend({
                     const pixelScale = image.getFileDirectory().ModelPixelScale;
                     // console.log('tiepoint->', tiepoint)
                     // console.log('pixelScale->', pixelScale)
-                    const geoTransform = [tiepoint.x, pixelScale[0], 0, tiepoint.y, 0, -1*pixelScale[1]];
+                    const geoTransform = [tiepoint.x, pixelScale[0], 0, tiepoint.y, 0, -1 * pixelScale[1]];
                     return geoTransform;
                 })(),
                 data: windData,
@@ -120,21 +108,11 @@ const WindBarbsTiffLayer = (L.Layer ? L.Layer : L.Class).extend({
             });
         };
 
-        // TODO 临时处理提高性能
-        // if(self.imageData && self.tifImage && self.oldTime == urlParams.timex && !this.fetching){
-        //     console.log('no fetch data->', self.windData);
-        //     draw(self.imageData, self.tifImage);
-        //     return;
-        // }
-
-        this.fetching = true;
-        getWindDataByTif(url, self._map.getZoom(), bounds).then(({imageData, image}) => {
+        getWindDataByTif(url).then(({imageData, image}) => {
             console.log('fetch imageData->', imageData);
 
-            this.fetching = false;
-            self.imageData = imageData;
+            self.imageData = [imageData[0], imageData[1]];
             self.tifImage = image;
-            self.oldTime = urlParams.timex;
 
             if(!self._windBarbs) return false;
             draw(imageData, image);
@@ -145,8 +123,8 @@ const WindBarbsTiffLayer = (L.Layer ? L.Layer : L.Class).extend({
 
     /*------------------------------------ PRIVATE ------------------------------------------*/
 
-    _initWindy: function(self) {
-        // windy object, copy options
+    _initWindy: function() {
+        const self = this;
         const options = Object.assign({ canvas: self._canvasLayer._canvas }, self.options.windyOpts);
         this._windBarbs = new WindBarbs(options);
 
@@ -185,9 +163,8 @@ const WindBarbsTiffLayer = (L.Layer ? L.Layer : L.Class).extend({
 
 export default (options) => new WindBarbsTiffLayer(options)
 
-const getWindDataByTif = (tifUrl) => {
+const getWindDataByTif = (tifUrl: string) => {
     const GeoTIFF = require('geotiff/src/main');
-    const pool = new GeoTIFF.Pool();
     const fetch = require("../../lib/fetch").default;
 
     return new Promise((resolve, reject) => {
@@ -196,29 +173,17 @@ const getWindDataByTif = (tifUrl) => {
             .then((arrayBuffer) => GeoTIFF.fromArrayBuffer(arrayBuffer))
             .then((tif) => tif.getImage())
             .then((image) => {
-                // return;
-
-                const [minLng, minLat, maxLng, maxLat] = image.getBoundingBox();
-
                 image.readRasters({
-                    pool,
+                    pool: new GeoTIFF.Pool(),   // 使用web-worker
                     samples: [0,1],
                     // window: [0, 0, image.getWidth() - 300, image.getHeight()- 300],
                 }).then((imageData) => {
-
-
                     resolve({imageData, image});
-
                 }).catch(e => {
-                    // console.log(`报错tif-->${z}/${x}/${y}.tif`)
-                    // console.log("image.readRasters报错")
-                    // console.error(e)
                     reject(e);
                 })
             })
             .catch((e) => {
-                // console.warn(`----------获取失败:${z}/${x}/${y}.tif---------------`)
-                // done(null, tile);
                 reject(e);
             });
     })

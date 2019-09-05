@@ -1,32 +1,54 @@
-import { invert, range, deg2rad, rad2deg} from './helper';
+import { invert, range, deg2rad } from './helper';
+
 /**
  * 是否是undefined
  * @param data
  * @returns {boolean}
  */
-const isUndefined = (data) => data === undefined;
+const isUndefined = (data: any) => data === undefined;
 
 /**
  * 是否是null
  * @param data
  * @returns {boolean}
  */
-const isNull = (data) => data === null;
+const isNull = (data: any) => data === null;
+
+interface WindBarbsOpts {
+    canvas: HTMLCanvasElement;
+    tifNoData: number;
+}
+
+interface RenderParams{
+    barbSize: number;
+    canvasW: number;
+    canvasH: number;
+    imgW: number;
+    imgH: number;
+    geoTransform: [number, number, number, number, number, number],
+    data: [number[], number[]],
+    extent: [
+        [number, number],
+        [number, number]
+    ]
+}
 
 export default class WindBarbs {
+    opts: WindBarbsOpts;
+
     /**
      *
      * @param {Object} opts
      * @param {HTMLCanvasElement} opts.canvas
      */
-    constructor(opts) {
-        this.opts = {
+    constructor(opts?: WindBarbsOpts) {
+        this.opts = Object.assign({
             canvas: opts.canvas,
             tifNoData: -9999,       // tif中noData的填充值
-        }
+        }, opts || {})
     }
 
-    render = (params) => {
+    render = (params: RenderParams) => {
         this.stop();
         const { barbSize, canvasW, canvasH, imgW, imgH, geoTransform, data, extent } = params;
 
@@ -66,12 +88,12 @@ export default class WindBarbs {
                 drawBarbs({context, x, y, barbSize, angle, spd5, spd10, spd50});
             });
         });
-    }
+    };
 
     stop = () => {
         const context = this.opts.canvas.getContext("2d");
-        context.clearRect(0, 0, 3000, 3000);
-    }
+        context.clearRect(0, 0, 30000, 30000);
+    };
 
     /**
      * 将数据转为格点数据
@@ -81,8 +103,8 @@ export default class WindBarbs {
      * @return {{spdData: any[], uData: any[], vData: any[]}}
      * @private
      */
-    _convertDataToGrid = (width, height, rasters) => {
-        const noData = this.opts.tifNoData
+    _convertDataToGrid = (width: number, height: number, rasters: [number[], number[]]) => {
+        const noData = this.opts.tifNoData;
         const uData = new Array(height);
         const vData = new Array(height);
         const spdData = new Array(height);
@@ -105,11 +127,23 @@ export default class WindBarbs {
     }
 }
 
+
+interface DrawBarbsParams {
+    context: CanvasRenderingContext2D;
+    x: number;
+    y: number;
+    barbSize: number;
+    angle: number;
+    spd5: number;
+    spd10: number;
+    spd50: number;
+}
+
 /**
  * 绘制风向杆
  * @param params
  */
-const drawBarbs = (params) => {
+const drawBarbs = (params: DrawBarbsParams) => {
     const { context, x, y, barbSize, angle, spd5, spd10, spd50 } = params;
 
     context.save();
