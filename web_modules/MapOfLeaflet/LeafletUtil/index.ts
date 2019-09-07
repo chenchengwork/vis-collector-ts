@@ -15,16 +15,7 @@ import { getWindyVelocityLayer, WindData } from './extend/windyVelocityLayer';
 // 加载风向杆layer
 import { getWindBarsTiffLayer } from "./extend/windBarbsLayer";
 
-
-// import windyGlVelocity from './extend/windyGlVelocity';
-
-// // 加载要素tif layer
-// import elementTileTifLayer from "./extend/elementTileTifLayer";
-//
-// // 加载移动Marker
-// import "./extend/movingMarker";
-//
-// // 加载地理编码工具
+// 加载地理编码工具
 // import GeoCoder from './GeoCoder';
 
 export interface LeafletUtilOpts extends L.MapOptions{

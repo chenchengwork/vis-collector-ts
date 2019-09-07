@@ -1,0 +1,11 @@
+{
+  "name": "gishelper",
+  "version": "1.0.0",
+  "author": "chencheng <daniel_txy@163.com>",
+  "description": "gis helper",
+  "main": "src/index",
+  "dependencies": {
+    "geotiff": "^1.0.0-beta.6"
+  },
+  "devDependencies": {}
+}

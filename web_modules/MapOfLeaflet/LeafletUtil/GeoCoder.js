@@ -31,7 +31,7 @@ export default class GeoCoder {
                 }
             }
         ).then((resp) => resp.json());
-    }
+    };
 
     /**
      * 逆地理编码
