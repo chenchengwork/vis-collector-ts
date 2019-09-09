@@ -6,7 +6,7 @@ const LeafletMap = () => {
 
     return (
         <Fragment>
-            <MainHeader title="Leaflet地图" rightRender={<div>12121</div>}/>
+            <MainHeader title="Leaflet地图" />
             <MainContent isShowMainHeader={true}>
                 <Map />
             </MainContent>

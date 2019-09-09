@@ -27,6 +27,14 @@ const LeftBar: React.FC<{mapUtil: TypeMapUtil}> = ({ mapUtil }) => {
                 }}
             >风向杆</div>
 
+            <div className="line" />
+            <div
+                className="item"
+                onClick={() => {
+                    mapUtil.testPixiOverlay()
+                }}
+            >pixi.js</div>
+
 
             {/*language=SCSS*/}
             <style jsx>{`

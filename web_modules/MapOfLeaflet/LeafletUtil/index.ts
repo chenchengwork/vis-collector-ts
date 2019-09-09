@@ -1,5 +1,5 @@
 import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+import L, {circle} from 'leaflet';
 import * as geojson from 'geojson';
 import IconMarker from './img/marker.png';
 
@@ -14,6 +14,9 @@ import { getWindyVelocityLayer, WindData } from './extend/windyVelocityLayer';
 
 // 加载风向杆layer
 import { getWindBarsTiffLayer } from "./extend/windBarbsLayer";
+
+// 加载pixiOverlay
+import { getPixiOverlay, PIXI } from './extend/pixiOverlay';
 
 // 加载地理编码工具
 // import GeoCoder from './GeoCoder';
@@ -576,6 +579,180 @@ export default class LeafletUtil {
         const y = coord.y - boxHeight/2 > mapHeight ? coord.y + boxHeight/2 : coord.y - boxHeight / 2;
 
         return { x, y }
+    }
+
+
+    testPixiOverlay = () => {
+        const map = this.map;
+        const loader = new PIXI.Loader();
+        loader.add("marker", require("./img/marker.png"))
+
+        loader.load((loader, resources) => {
+            map.setView([51.505, -0.09], 14);
+            const markerTexture = resources.marker.texture;
+
+            const pixiOverlay = (function() {
+                let frame: number = null;
+                let firstDraw = true;
+                let prevZoom: number;
+
+                const markerLatLng = [51.5, -0.09] as [number, number];
+                const marker = new PIXI.Sprite(markerTexture);
+                 marker.popup = L.popup({className: 'pixi-popup'})
+                    .setLatLng(markerLatLng)
+                    .setContent('<b>Hello world!</b><br>I am a popup.')
+                    .openOn(map);
+
+                const markerScale: {current: number; target: number} = {
+                    current: null,
+                    target: null,
+                };
+
+                const polygonLatLngs = [
+                    [51.509, -0.08],
+                    [51.503, -0.06],
+                    [51.51, -0.047],
+                    [51.509, -0.08]
+                ];
+                let projectedPolygon;
+
+                const circleCenter = [51.508, -0.11] as [number, number];
+                let projectedCenter;
+                let circleRadius = 85;
+
+                // 三角形
+                const triangle = new PIXI.Graphics();
+                triangle.popup = L.popup()
+                    .setLatLng([51.5095, -0.063])
+                    .setContent('I am a polygon.');
+
+                // 圆形
+                const circle = new PIXI.Graphics();
+                circle.popup = L.popup()
+                    .setLatLng(circleCenter)
+                    .setContent('I am a circle.');
+
+                [marker, triangle, circle].forEach(function(geo) {
+                    geo.interactive = true;
+                });
+
+                const pixiContainer = new PIXI.Container();
+                pixiContainer.addChild(marker, triangle, circle);
+                pixiContainer.interactive = true;
+                pixiContainer.buttonMode = true;    //
+
+                var doubleBuffering = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+                return getPixiOverlay(function(utils) {
+                    if (frame) {
+                        cancelAnimationFrame(frame);
+                        frame = null;
+                    }
+
+                    const zoom = utils.getMap().getZoom();
+                    const container = utils.getContainer();
+                    const renderer = utils.getRenderer();
+                    const project = utils.latLngToLayerPoint;
+                    const scale = utils.getScale();
+
+                    if (firstDraw) {
+
+                        // 添加地图点击事件
+                        utils.getMap().on('click', function(e: L.LeafletMouseEvent) {
+                            // not really nice but much better than before
+                            // good starting point for improvements
+                            const interaction = utils.getRenderer().plugins.interaction;
+                            const pointerEvent = e.originalEvent;
+                            const pixiPoint = new PIXI.Point();
+
+                            // get global click position in pixiPoint:
+                            interaction.mapPositionToPoint(pixiPoint, pointerEvent.clientX, pointerEvent.clientY);
+                            // get what is below the click if any:
+                            const target = interaction.hitTest(pixiPoint, container);
+
+                            if (target && target.popup) {
+                                target.popup.openOn(map);
+                            }
+                        });
+
+                        const markerCoords = project(markerLatLng);
+                        marker.x = markerCoords.x;
+                        marker.y = markerCoords.y;
+                        marker.anchor.set(0.5, 1);
+                        marker.scale.set(1 / scale);
+                        markerScale.current = 1 / scale;
+
+                        projectedPolygon = polygonLatLngs.map(function(coords) {return project(coords);});
+
+                        projectedCenter = project(circleCenter);
+                        circleRadius = circleRadius / scale;
+                    }
+
+
+                    if (firstDraw || prevZoom !== zoom) {
+                        markerScale.current = marker.scale.x;
+                        markerScale.target = 1 / scale;
+
+                        triangle.clear();
+                        triangle.lineStyle(3 / scale, 0x3388ff, 1);
+                        triangle.beginFill(0x3388ff, 0.2);
+                        triangle.x = projectedPolygon[0].x;
+                        triangle.y = projectedPolygon[0].y;
+                        projectedPolygon.forEach(function(coords, index) {
+                            if (index == 0) triangle.moveTo(0, 0);
+                            else triangle.lineTo(coords.x - triangle.x, coords.y - triangle.y);
+                        });
+                        triangle.endFill();
+
+                        circle.clear();
+                        circle.lineStyle(3 / scale, 0xff0000, 1);
+                        circle.beginFill(0xff0033, 0.5);
+                        circle.x = projectedCenter.x;
+                        circle.y = projectedCenter.y;
+                        circle.drawCircle(0, 0, circleRadius);
+                        circle.endFill();
+                    }
+
+                    const duration = 100;
+                    let start: number;
+                    const animate = (timestamp: number) => {
+                        let progress: number;
+                        if (start === null) start = timestamp;
+                        progress = timestamp - start;
+                        let lambda = progress / duration;
+                        if (lambda > 1) lambda = 1;
+                        lambda = lambda * (0.4 + lambda * (2.2 + lambda * -1.6));
+                        marker.scale.set(markerScale.current + lambda * (markerScale.target - markerScale.current));
+
+                        renderer.render(container);
+                        if (progress < duration) {
+                            frame = requestAnimationFrame(animate);
+                        }
+                    };
+
+                    if (!firstDraw && prevZoom !== zoom) {
+                        start = null;
+                        frame = requestAnimationFrame(animate);
+                    }
+
+                    firstDraw = false;
+                    prevZoom = zoom;
+                    renderer.render(container);
+                }, pixiContainer, {
+                    doubleBuffering: doubleBuffering,
+                    autoPreventDefault: false
+                });
+            })();
+
+            pixiOverlay.addTo(map);
+
+            // L.polygon([
+            //     [51.509, -0.08],
+            //     [51.503, -0.06],
+            //     [51.51, -0.047],
+            //     [51.509, -0.08]
+            // ]).addTo(map)
+        })
     }
 
 }
