@@ -31,7 +31,9 @@ const LeftBar: React.FC<{mapUtil: TypeMapUtil}> = ({ mapUtil }) => {
             <div
                 className="item"
                 onClick={() => {
-                    mapUtil.testPixiOverlay()
+                    // mapUtil.testPixiOverlay()
+                    // mapUtil.testPixiPolygon()
+                    mapUtil.pixi.addPolygon();
                 }}
             >pixi.js</div>
 

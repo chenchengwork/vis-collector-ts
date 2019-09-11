@@ -17,6 +17,8 @@ import { getWindBarsTiffLayer } from "./extend/windBarbsLayer";
 
 // 加载pixiOverlay
 import { getPixiOverlay, PIXI } from './extend/pixiOverlay';
+import PixiLayer from './extend/pixiOverlay/PixiLayer';
+
 
 // 加载地理编码工具
 // import GeoCoder from './GeoCoder';
@@ -49,6 +51,7 @@ const assembleBaseTmsLayers = (baseLayerTMS: string | string[], ZOOM: {maxZoom: 
 export default class LeafletUtil {
     map: L.Map;
     mouseTool: MouseTool;
+    pixi: PixiLayer
     protected containerDom: HTMLElement;
     protected baseLayers: L.TileLayer[];
     private _cacheData = {
@@ -90,6 +93,9 @@ export default class LeafletUtil {
 
         // 鼠标工具
         this.mouseTool = new MouseTool(this.map);
+
+        // pixi
+        this.pixi = new PixiLayer(this.map);
 
         // 地理编码工具
         // this.geoCoder = new GeoCoder();
@@ -582,6 +588,82 @@ export default class LeafletUtil {
     }
 
 
+    testPixiPolygon = () => {
+        const map = this.map;
+
+        const polygonLatLngs = [
+            [51.509, -0.08],
+            [51.503, -0.06],
+            [51.51, -0.047],
+            [51.509, -0.08]
+        ];
+
+
+        //
+        // map.setView([51.505, -0.09], 14);
+
+
+        // 三角形
+        const triangle = new PIXI.Graphics();
+        const pixiContainer = new PIXI.Container();
+        pixiContainer.addChild(triangle);
+
+        const pixiOverlay = getPixiOverlay(function(utils) {
+            const container = utils.getContainer();
+            const renderer = utils.getRenderer();
+            const project = utils.latLngToLayerPoint;
+            const scale = utils.getScale();
+            //
+            let projectedPolygon = polygonLatLngs.map(function(coords) {return project(coords);})
+
+            triangle.clear();
+            triangle.lineStyle(3 / scale, 0x3388ff, 1);
+            triangle.beginFill(0x3388ff, 0.2);
+            triangle.x = projectedPolygon[0].x;
+            triangle.y = projectedPolygon[0].y;
+            projectedPolygon.forEach(function(coords, index) {
+                if (index == 0) triangle.moveTo(0, 0);
+                else triangle.lineTo(coords.x - triangle.x, coords.y - triangle.y);
+            });
+            triangle.endFill();
+            renderer.render(container);
+        }, pixiContainer, {
+            doubleBuffering: /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream,
+            autoPreventDefault: false
+        });
+        pixiOverlay.addTo(this.map);
+        map.flyToBounds(polygonLatLngs, {animate: false});
+        // map.flyToBounds(polygonLatLngs, {animate: false});
+        // const utils = pixiOverlay.utils;
+        //
+        // const container = utils.getContainer();
+        // const renderer = utils.getRenderer();
+        // const project = utils.latLngToLayerPoint;
+        // const scale = utils.getScale();
+        // console.log('scale->', scale)
+        // console.log('a == container->', a == container)
+        // let projectedPolygon = polygonLatLngs.map(function(coords) {return project(coords);})
+        //
+        // triangle.clear();
+        // triangle.lineStyle(3 / scale, 0x3388ff, 1);
+        // triangle.beginFill(0x3388ff, 0.2);
+        // triangle.x = projectedPolygon[0].x;
+        // triangle.y = projectedPolygon[0].y;
+        // projectedPolygon.forEach(function(coords, index) {
+        //     if (index == 0) triangle.moveTo(0, 0);
+        //     else triangle.lineTo(coords.x - triangle.x, coords.y - triangle.y);
+        // });
+        // triangle.endFill();
+        // renderer.render(container);
+
+
+        // pixiOverlay._update()
+
+
+        // L.polygon(polygonLatLngs).addTo(this.map)
+
+    }
+
     testPixiOverlay = () => {
         const map = this.map;
         const loader = new PIXI.Loader();
@@ -715,25 +797,25 @@ export default class LeafletUtil {
 
                     const duration = 100;
                     let start: number;
-                    const animate = (timestamp: number) => {
-                        let progress: number;
-                        if (start === null) start = timestamp;
-                        progress = timestamp - start;
-                        let lambda = progress / duration;
-                        if (lambda > 1) lambda = 1;
-                        lambda = lambda * (0.4 + lambda * (2.2 + lambda * -1.6));
-                        marker.scale.set(markerScale.current + lambda * (markerScale.target - markerScale.current));
-
-                        renderer.render(container);
-                        if (progress < duration) {
-                            frame = requestAnimationFrame(animate);
-                        }
-                    };
-
-                    if (!firstDraw && prevZoom !== zoom) {
-                        start = null;
-                        frame = requestAnimationFrame(animate);
-                    }
+                    // const animate = (timestamp: number) => {
+                    //     let progress: number;
+                    //     if (start === null) start = timestamp;
+                    //     progress = timestamp - start;
+                    //     let lambda = progress / duration;
+                    //     if (lambda > 1) lambda = 1;
+                    //     lambda = lambda * (0.4 + lambda * (2.2 + lambda * -1.6));
+                    //     marker.scale.set(markerScale.current + lambda * (markerScale.target - markerScale.current));
+                    //
+                    //     renderer.render(container);
+                    //     if (progress < duration) {
+                    //         frame = requestAnimationFrame(animate);
+                    //     }
+                    // };
+                    //
+                    // if (!firstDraw && prevZoom !== zoom) {
+                    //     start = null;
+                    //     frame = requestAnimationFrame(animate);
+                    // }
 
                     firstDraw = false;
                     prevZoom = zoom;
@@ -746,12 +828,9 @@ export default class LeafletUtil {
 
             pixiOverlay.addTo(map);
 
-            // L.polygon([
-            //     [51.509, -0.08],
-            //     [51.503, -0.06],
-            //     [51.51, -0.047],
-            //     [51.509, -0.08]
-            // ]).addTo(map)
+            map.flyTo([51.505, -0.09])
+
+
         })
     }
 
