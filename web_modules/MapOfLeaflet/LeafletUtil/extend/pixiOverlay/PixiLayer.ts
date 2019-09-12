@@ -96,7 +96,7 @@ export default class PixiLayer {
     }
 
 
-    addMarkerForClick = (markers) => {
+    addMarkerForClick = <T>(data: T[]) => {
         const map = this.map;
         const loader = new PIXI.Loader();
         const getImg = (name: string) => `/data/leaflet/pixi/markers/${name}`;
@@ -118,6 +118,22 @@ export default class PixiLayer {
                 let firstDraw = true;
                 let prevZoom: number;
                 const markerSprites = [] as PIXI.Sprite[];
+
+                const markers = [] as {
+                    shape: PIXI.Sprite;
+                    textureIndex: number;
+                    position: {
+                        currentX: number;
+                        currentY: number;
+                        targetX: number;
+                        targetY: number;
+                        currentScale: number;
+                        targetScale: number;
+                    };
+                    x0: number;
+                    y0: number;
+                }[];
+
                 let colorScale = d3Scale.scaleLinear()
                     .domain([0, 50, 100])
                     .range(["#c6233c", "#ffd300", "#008000"]);
@@ -138,8 +154,8 @@ export default class PixiLayer {
                         prevZoom = zoom;
                         console.log('11212111212121212')
                         console.time("time1")
-                        markers.forEach((marker) => {
-                            const coords = project([marker.latitude, marker.longitude]);
+                        data.forEach((item) => {
+                            const coords = project([item.latitude, item.longitude]);
                             const index = Math.floor(Math.random() * textures.length);
                             const markerSprite = new PIXI.Sprite(textures[index]);
                             markerSprite.textureIndex = index;
@@ -147,27 +163,27 @@ export default class PixiLayer {
                             markerSprite.y0 = coords.y;
                             markerSprite.anchor.set(0.5, 0.5);
 
-                            const tint = d3Color.color(colorScale(marker.avancement || Math.random() * 100)).rgb();
+                            const tint = d3Color.color(colorScale(item.avancement || Math.random() * 100)).rgb();
                             markerSprite.tint = 256 * (tint.r * 256 + tint.g) + tint.b;
                             container.addChild(markerSprite);
                             markerSprites.push(markerSprite);
-                            markerSprite.legend = marker.city || marker.label;
+                            markerSprite.legend = item.city || item.label;
                         });
 
                         console.timeEnd("time1")
 
                         console.time("time2")
-                        const quadTrees: {[index: number]: PIXI.Sprite} = {};
+                        const quadTrees = new Map();
                         for (let z = map.getMinZoom(); z <= map.getMaxZoom(); z++) {
                             const rInit = ((z <= 7) ? 10 : 24) / utils.getScale(z);
-                            quadTrees[z] = solveCollision(markerSprites, {r0: rInit, zoom: z});
+                            quadTrees.set(z, solveCollision(markerSprites, {r0: rInit, zoom: z}));
                         }
                         console.timeEnd("time2");
                         console.log('quadTrees->', quadTrees);
 
                         function findMarker(ll) {
                             const layerPoint = project(ll);
-                            const quadTree = quadTrees[utils.getMap().getZoom()];
+                            const quadTree = quadTrees.get(utils.getMap().getZoom());
                             let marker;
                             const rMax = quadTree.rMax;
                             let found = false;
@@ -183,6 +199,7 @@ export default class PixiLayer {
                                 }
                                 return found || x1 > layerPoint.x + rMax || x2 + rMax < layerPoint.x || y1 > layerPoint.y + rMax || y2 + rMax < layerPoint.y;
                             });
+
                             return marker;
                         }
 
