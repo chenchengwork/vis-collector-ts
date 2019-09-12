@@ -1,4 +1,4 @@
-import L from 'leaflet';
+import L, {LeafletEvent} from 'leaflet';
 import PixiOverlay, { PIXI, Options, Utils, PixiOverlayInterface } from './PixiOverlay';
 import { d3Color, d3Scale } from './tool';
 
@@ -99,8 +99,9 @@ export default class PixiLayer {
     addMarkerForClick = (markers) => {
         const map = this.map;
         const loader = new PIXI.Loader();
-        const getImg = (name) => `/data/leaflet/pixi/markers/${name}`;
+        const getImg = (name: string) => `/data/leaflet/pixi/markers/${name}`;
 
+        // 准备资源
         loader.add('plane', getImg('plane.png'))
             .add('focusPlane', getImg('focus-plane.png'))
             .add('circle', getImg('circle.png'))
@@ -114,63 +115,67 @@ export default class PixiLayer {
             const container = new PIXI.Container();
 
             const assembleShape = (() => {
-                var firstDraw = true;
-                var prevZoom;
-                var markerSprites = [];
-                var colorScale = d3Scale.scaleLinear()
+                let firstDraw = true;
+                let prevZoom: number;
+                const markerSprites = [] as PIXI.Sprite[];
+                let colorScale = d3Scale.scaleLinear()
                     .domain([0, 50, 100])
                     .range(["#c6233c", "#ffd300", "#008000"]);
 
-                var frame = null;
-                var focus = null;
+                let frame: number = null;
+                let focus: PIXI.Sprite = null;
 
                 return (utils: Utils) => {
-                    var zoom = utils.getMap().getZoom();
+                    const zoom = utils.getMap().getZoom();
 
-                    var container = utils.getContainer();
-                    var renderer = utils.getRenderer();
-                    var project = utils.latLngToLayerPoint;
-                    var scale = utils.getScale();
-                    var invScale = 1 / scale;
+                    const container = utils.getContainer();
+                    const renderer = utils.getRenderer();
+                    const project = utils.latLngToLayerPoint;
+                    const scale = utils.getScale();
+                    const invScale = 1 / scale;
+
                     if (firstDraw) {
                         prevZoom = zoom;
                         console.log('11212111212121212')
                         console.time("time1")
-                        markers.forEach(function(marker) {
-                            var coords = project([marker.latitude, marker.longitude]);
-                            var index = Math.floor(Math.random() * textures.length);
-                            var markerSprite = new PIXI.Sprite(textures[index]);
+                        markers.forEach((marker) => {
+                            const coords = project([marker.latitude, marker.longitude]);
+                            const index = Math.floor(Math.random() * textures.length);
+                            const markerSprite = new PIXI.Sprite(textures[index]);
                             markerSprite.textureIndex = index;
                             markerSprite.x0 = coords.x;
                             markerSprite.y0 = coords.y;
                             markerSprite.anchor.set(0.5, 0.5);
-                            var tint = d3Color.color(colorScale(marker.avancement || Math.random() * 100)).rgb();
+
+                            const tint = d3Color.color(colorScale(marker.avancement || Math.random() * 100)).rgb();
                             markerSprite.tint = 256 * (tint.r * 256 + tint.g) + tint.b;
                             container.addChild(markerSprite);
                             markerSprites.push(markerSprite);
                             markerSprite.legend = marker.city || marker.label;
                         });
+
                         console.timeEnd("time1")
 
                         console.time("time2")
-                        var quadTrees = {};
-                        for (var z = map.getMinZoom(); z <= map.getMaxZoom(); z++) {
-                            var rInit = ((z <= 7) ? 10 : 24) / utils.getScale(z);
+                        const quadTrees: {[index: number]: PIXI.Sprite} = {};
+                        for (let z = map.getMinZoom(); z <= map.getMaxZoom(); z++) {
+                            const rInit = ((z <= 7) ? 10 : 24) / utils.getScale(z);
                             quadTrees[z] = solveCollision(markerSprites, {r0: rInit, zoom: z});
                         }
-                        console.timeEnd("time2")
+                        console.timeEnd("time2");
                         console.log('quadTrees->', quadTrees);
+
                         function findMarker(ll) {
-                            var layerPoint = project(ll);
-                            var quadTree = quadTrees[utils.getMap().getZoom()];
-                            var marker;
-                            var rMax = quadTree.rMax;
-                            var found = false;
+                            const layerPoint = project(ll);
+                            const quadTree = quadTrees[utils.getMap().getZoom()];
+                            let marker;
+                            const rMax = quadTree.rMax;
+                            let found = false;
                             quadTree.visit(function(quad, x1, y1, x2, y2) {
                                 if (!quad.length) {
-                                    var dx = quad.data.x - layerPoint.x;
-                                    var dy = quad.data.y - layerPoint.y;
-                                    var r = quad.data.scale.x * 16;
+                                    const dx = quad.data.x - layerPoint.x;
+                                    const dy = quad.data.y - layerPoint.y;
+                                    const r = quad.data.scale.x * 16;
                                     if (dx * dx + dy * dy <= r * r) {
                                         marker = quad.data;
                                         found = true;
@@ -181,39 +186,38 @@ export default class PixiLayer {
                             return marker;
                         }
 
+                        // 鼠标点击事件
                         map.on('click', function(e) {
-                            var redraw = false;
+                            let redraw = false;
                             if (focus) {
                                 focus.texture = textures[focus.textureIndex];
                                 focus = null;
-                                // L.DomUtil.addClass(legend, 'hide');
-                                // legendContent.innerHTML = '';
                                 redraw = true;
                             }
-                            var marker = findMarker(e.latlng);
+                            const marker = findMarker(e.latlng);
                             if (marker) {
                                 marker.texture = focusTextures[marker.textureIndex];
                                 focus = marker;
-                                // legendContent.innerHTML = marker.legend;
-                                // L.DomUtil.removeClass(legend, 'hide');
                                 redraw = true;
                             }
                             if (redraw) utils.getRenderer().render(container);
                         });
 
-                        var self = this;
-                        // map.on('mousemove', L.Util.throttle(function(e) {
-                        //     var marker = findMarker(e.latlng);
+                        // 鼠标移动事件
+                        // @ts-ignore
+                        // map.on('mousemove', L.Util.throttle((e: L.LeafletMouseEvent) => {
+                        //     let marker = findMarker(e.latlng);
                         //     if (marker) {
-                        //         L.DomUtil.addClass(self._container, 'leaflet-interactive');
+                        //         console.log("选中")
                         //     } else {
-                        //         L.DomUtil.removeClass(self._container, 'leaflet-interactive');
+                        //         console.log("未选中")
                         //     }
-                        // }, 32));
+                        // }, 100, null));
                     }
+
                     if (firstDraw || prevZoom !== zoom) {
                         markerSprites.forEach(function(markerSprite) {
-                            var position = markerSprite.cache[zoom];
+                            const position = markerSprite.cache[zoom];
                             if (firstDraw) {
                                 markerSprite.x = position.x;
                                 markerSprite.y = position.y;
@@ -229,18 +233,19 @@ export default class PixiLayer {
                         });
                     }
 
-                    var start = null;
-                    var delta = 250;
+                    let start: number = null;
+                    const delta = 250;
 
                     if (frame) {
                         cancelAnimationFrame(frame);
                         frame = null;
                     }
-                    function animate(timestamp) {
-                        var progress;
+
+                    function animate(timestamp: number) {
+                        let progress;
                         if (start === null) start = timestamp;
                         progress = timestamp - start;
-                        var lambda = progress / delta;
+                        let lambda = progress / delta;
                         if (lambda > 1) lambda = 1;
                         lambda = lambda * (0.4 + lambda * (2.2 + lambda * -1.6));
                         markerSprites.forEach(function(markerSprite) {
