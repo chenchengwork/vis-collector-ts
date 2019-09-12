@@ -122,16 +122,24 @@ export default class PixiLayer {
                 const markers = [] as {
                     shape: PIXI.Sprite;
                     textureIndex: number;
-                    position: {
-                        currentX: number;
-                        currentY: number;
-                        targetX: number;
-                        targetY: number;
-                        currentScale: number;
-                        targetScale: number;
-                    };
+
                     x0: number;
                     y0: number;
+
+                    currentX?: number;
+                    currentY?: number;
+                    targetX?: number;
+                    targetY?: number;
+                    currentScale?: number;
+                    targetScale?: number;
+                    xp?: number;
+                    yp?: number;
+                    r?: number;
+                    r0?: number;
+                    xMin?: number;
+                    xMax?: number;
+                    yMin?: number;
+                    yMax?: number;
                 }[];
 
                 let colorScale = d3Scale.scaleLinear()
@@ -168,6 +176,13 @@ export default class PixiLayer {
                             container.addChild(markerSprite);
                             markerSprites.push(markerSprite);
                             markerSprite.legend = item.city || item.label;
+
+                            markers.push({
+                                shape: markerSprite,
+                                textureIndex: index,
+                                x0: coords.x,
+                                y0: coords.y,
+                            })
                         });
 
                         console.timeEnd("time1")
@@ -177,6 +192,7 @@ export default class PixiLayer {
                         for (let z = map.getMinZoom(); z <= map.getMaxZoom(); z++) {
                             const rInit = ((z <= 7) ? 10 : 24) / utils.getScale(z);
                             quadTrees.set(z, solveCollision(markerSprites, {r0: rInit, zoom: z}));
+                            // quadTrees.set(z, solveCollision(markers, {r0: rInit, zoom: z}));
                         }
                         console.timeEnd("time2");
                         console.log('quadTrees->', quadTrees);

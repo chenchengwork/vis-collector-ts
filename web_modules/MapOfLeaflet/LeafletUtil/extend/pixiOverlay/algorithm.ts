@@ -1,4 +1,25 @@
-import { quadtree } from 'd3-quadtree';
+import { quadtree, Quadtree } from 'd3-quadtree';
+
+interface A {
+    x0: number;
+    y0: number;
+
+
+    currentX?: number;
+    currentY?: number;
+    targetX?: number;
+    targetY?: number;
+    currentScale?: number;
+    targetScale?: number;
+    xp?: number;
+    yp?: number;
+    r?: number;
+    r0?: number;
+    xMin?: number;
+    xMax?: number;
+    yMin?: number;
+    yMax?: number;
+}
 
 /**
  * 生成碰撞检测数据集
@@ -75,7 +96,7 @@ export const solveCollision = function(circles, opts) {
                 }
             };
 
-            return (quad, x1, y1, x2, y2) => {
+            return (quad, x1: number, y1: number, x2: number, y2: number) => {
                 if (!quad.length) {
                     do {
                         if (quad.data != d && d.xMax > quad.data.xMin && d.xMin < quad.data.xMax && d.yMax > quad.data.yMin && d.yMin < quad.data.yMax) {
