@@ -60,6 +60,13 @@ export interface Utils {
     getMap: () => L.Map;
 }
 
+export interface PixiOverlayInterface extends L.Layer{
+    utils: Utils;
+    getUtils: () => Utils;
+    _update: () => void;
+}
+
+
 const pixiOverlayClass = {
     options: {
         // @option padding: Number = 0.1
@@ -271,17 +278,17 @@ const pixiOverlayClass = {
             // containerPointToLayerPoint: 给定相对于地图container容器的像素坐标，返回相对于origin pixel的相应像素坐标。
             min = this._map.containerPointToLayerPoint(mapSize.multiplyBy(-p)).round();
 
-console.log('getPixelOrigin->', this._map.getPixelOrigin());
-console.log('this._wgsOrigin->', this._wgsOrigin);
-console.log('mapSize->', mapSize);
-console.log('mapSize.multiplyBy(-p)->', mapSize.multiplyBy(-p));
-console.log('min->', min);
+// console.log('getPixelOrigin->', this._map.getPixelOrigin());
+// console.log('this._wgsOrigin->', this._wgsOrigin);
+// console.log('mapSize->', mapSize);
+// console.log('mapSize.multiplyBy(-p)->', mapSize.multiplyBy(-p));
+// console.log('min->', min);
 
         this._bounds = new L.Bounds(min, min.add(mapSize.multiplyBy(1 + p * 2)).round());
         this._center = this._map.getCenter();
         this._zoom = this._map.getZoom();
 
-console.log("this._bounds->", this._bounds);
+// console.log("this._bounds->", this._bounds);
 
         if (this._doubleBuffering) {
             const currentRenderer = this._renderer;
@@ -294,8 +301,8 @@ console.log("this._bounds->", this._bounds);
             container = this._container,
             size = b.getSize();
 
-console.log('this._renderer.size->', this._renderer.size);
-console.log('size->', size);
+// console.log('this._renderer.size->', this._renderer.size);
+// console.log('size->', size);
 
         // 设置渲染容器的分辨率和大小
         if (!this._renderer.size || this._renderer.size.x !== size.x || this._renderer.size.y !== size.y) {

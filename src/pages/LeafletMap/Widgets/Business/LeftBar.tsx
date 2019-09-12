@@ -33,7 +33,17 @@ const LeftBar: React.FC<{mapUtil: TypeMapUtil}> = ({ mapUtil }) => {
                 onClick={() => {
                     // mapUtil.testPixiOverlay()
                     // mapUtil.testPixiPolygon()
-                    mapUtil.pixi.addPolygon();
+                    // mapUtil.pixi.addPolygon();
+                    request.get("/data/leaflet/pixi/communes.json").then(({data}) => {
+                        const realData = data.slice(0, 100)
+                        // const realData = data
+                        console.log('realData->', realData)
+
+                        mapUtil.pixi.addMarkerForClick(realData);
+                    });
+
+
+
                 }}
             >pixi.js</div>
 
