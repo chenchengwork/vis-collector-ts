@@ -1,6 +1,6 @@
-import { quadtree, Quadtree } from 'd3-quadtree';
+import { quadtree, Quadtree, QuadtreeLeaf } from 'd3-quadtree';
 
-interface A {
+interface Circle {
     x0: number;
     y0: number;
 
@@ -21,16 +21,23 @@ interface A {
     yMax?: number;
 }
 
+interface Opts {
+    r0: number;
+    zoom: number;
+    extent?:[[number, number], [number, number]];
+}
+
 /**
  * 生成碰撞检测数据集
  * @param circles
  * @param opts
  */
-export const solveCollision = function(circles, opts) {
-    opts = opts || {};
-    const tree = quadtree()
-        .x(function(d) {return d.xp;})
-        .y(function(d) {return d.yp;});
+export const solveCollision = function(circles: Circle[], opts: Opts) {
+    // opts = opts || {};
+    const tree: Quadtree<Circle[]> = quadtree()
+        .x((d) => d.xp)
+        .y((d) => d.yp);
+
     if (opts.extent !== undefined) tree.extent(opts.extent);
     let rMax = 0;
 
@@ -44,8 +51,8 @@ export const solveCollision = function(circles, opts) {
         circle.yMin = circle.y0 - circle.r0;
         circle.yMax = circle.y0 + circle.r0;
 
-        const collide = (d) =>{
-            const fixCollision = (node) => {
+        const collide = (d: Circle) =>{
+            const fixCollision = (node: Circle) => {
                 const x = d.xp - node.xp;
                 const y = d.yp - node.yp;
                 const l = x * x + y * y;
@@ -96,7 +103,7 @@ export const solveCollision = function(circles, opts) {
                 }
             };
 
-            return (quad, x1: number, y1: number, x2: number, y2: number) => {
+            return (quad: QuadtreeLeaf<Circle>, x1: number, y1: number, x2: number, y2: number) => {
                 if (!quad.length) {
                     do {
                         if (quad.data != d && d.xMax > quad.data.xMin && d.xMin < quad.data.xMax && d.yMax > quad.data.yMin && d.yMin < quad.data.yMax) {

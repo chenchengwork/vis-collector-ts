@@ -123,15 +123,8 @@ export default class PixiLayer {
                     shape: PIXI.Sprite;
                     textureIndex: number;
 
-                    x0: number;
-                    y0: number;
-
-                    currentX?: number;
-                    currentY?: number;
-                    targetX?: number;
-                    targetY?: number;
-                    currentScale?: number;
-                    targetScale?: number;
+                    x0?: number;
+                    y0?: number;
                     xp?: number;
                     yp?: number;
                     r?: number;
@@ -140,6 +133,20 @@ export default class PixiLayer {
                     xMax?: number;
                     yMin?: number;
                     yMax?: number;
+                    cache?: {
+                        [index: number]: {
+                            x: number;
+                            y: number;
+                            r: number;
+                        }
+                    }
+
+                    currentX?: number;
+                    currentY?: number;
+                    targetX?: number;
+                    targetY?: number;
+                    currentScale?: number;
+                    targetScale?: number;
                 }[];
 
                 let colorScale = d3Scale.scaleLinear()
@@ -166,16 +173,12 @@ export default class PixiLayer {
                             const coords = project([item.latitude, item.longitude]);
                             const index = Math.floor(Math.random() * textures.length);
                             const markerSprite = new PIXI.Sprite(textures[index]);
-                            markerSprite.textureIndex = index;
-                            markerSprite.x0 = coords.x;
-                            markerSprite.y0 = coords.y;
                             markerSprite.anchor.set(0.5, 0.5);
 
                             const tint = d3Color.color(colorScale(item.avancement || Math.random() * 100)).rgb();
                             markerSprite.tint = 256 * (tint.r * 256 + tint.g) + tint.b;
                             container.addChild(markerSprite);
                             markerSprites.push(markerSprite);
-                            markerSprite.legend = item.city || item.label;
 
                             markers.push({
                                 shape: markerSprite,
@@ -191,8 +194,8 @@ export default class PixiLayer {
                         const quadTrees = new Map();
                         for (let z = map.getMinZoom(); z <= map.getMaxZoom(); z++) {
                             const rInit = ((z <= 7) ? 10 : 24) / utils.getScale(z);
-                            quadTrees.set(z, solveCollision(markerSprites, {r0: rInit, zoom: z}));
-                            // quadTrees.set(z, solveCollision(markers, {r0: rInit, zoom: z}));
+                            // quadTrees.set(z, solveCollision(markerSprites, {r0: rInit, zoom: z}));
+                            quadTrees.set(z, solveCollision(markers, {r0: rInit, zoom: z}));
                         }
                         console.timeEnd("time2");
                         console.log('quadTrees->', quadTrees);
@@ -205,9 +208,9 @@ export default class PixiLayer {
                             let found = false;
                             quadTree.visit(function(quad, x1, y1, x2, y2) {
                                 if (!quad.length) {
-                                    const dx = quad.data.x - layerPoint.x;
-                                    const dy = quad.data.y - layerPoint.y;
-                                    const r = quad.data.scale.x * 16;
+                                    const dx = quad.data.shape.x - layerPoint.x;
+                                    const dy = quad.data.shape.y - layerPoint.y;
+                                    const r = quad.data.shape.scale.x * 16;
                                     if (dx * dx + dy * dy <= r * r) {
                                         marker = quad.data;
                                         found = true;
@@ -223,16 +226,19 @@ export default class PixiLayer {
                         map.on('click', function(e) {
                             let redraw = false;
                             if (focus) {
-                                focus.texture = textures[focus.textureIndex];
+                                focus.shape.texture = textures[focus.textureIndex];
                                 focus = null;
                                 redraw = true;
                             }
+
                             const marker = findMarker(e.latlng);
                             if (marker) {
-                                marker.texture = focusTextures[marker.textureIndex];
+                                // marker.texture = focusTextures[marker.textureIndex];
+                                marker.shape.texture = focusTextures[marker.textureIndex];
                                 focus = marker;
                                 redraw = true;
                             }
+
                             if (redraw) utils.getRenderer().render(container);
                         });
 
@@ -249,22 +255,25 @@ export default class PixiLayer {
                     }
 
                     if (firstDraw || prevZoom !== zoom) {
-                        markerSprites.forEach(function(markerSprite) {
-                            const position = markerSprite.cache[zoom];
+                        markers.forEach(function(marker) {
+                            const position = marker.cache[zoom];
                             if (firstDraw) {
-                                markerSprite.x = position.x;
-                                markerSprite.y = position.y;
-                                markerSprite.scale.set((position.r * scale < 16) ? position.r / 16 : invScale);
+                                marker.shape.x = position.x;
+                                marker.shape.y = position.y;
+                                marker.shape.scale.set((position.r * scale < 16) ? position.r / 16 : invScale);
                             } else {
-                                markerSprite.currentX = markerSprite.x;
-                                markerSprite.currentY = markerSprite.y;
-                                markerSprite.targetX = position.x;
-                                markerSprite.targetY = position.y;
-                                markerSprite.currentScale = markerSprite.scale.x;
-                                markerSprite.targetScale = (position.r * scale < 16) ? position.r / 16 : invScale;
+                                marker.currentX = marker.shape.x;
+                                marker.currentY = marker.shape.y;
+                                marker.targetX = position.x;
+                                marker.targetY = position.y;
+                                marker.currentScale = marker.shape.scale.x;
+                                marker.targetScale = (position.r * scale < 16) ? position.r / 16 : invScale;
                             }
                         });
                     }
+
+
+                    //-----------------------开启层级缩放动画-----------------------------------
 
                     let start: number = null;
                     const delta = 250;
@@ -281,10 +290,11 @@ export default class PixiLayer {
                         let lambda = progress / delta;
                         if (lambda > 1) lambda = 1;
                         lambda = lambda * (0.4 + lambda * (2.2 + lambda * -1.6));
-                        markerSprites.forEach(function(markerSprite) {
-                            markerSprite.x = markerSprite.currentX + lambda * (markerSprite.targetX - markerSprite.currentX);
-                            markerSprite.y = markerSprite.currentY + lambda * (markerSprite.targetY - markerSprite.currentY);
-                            markerSprite.scale.set(markerSprite.currentScale + lambda * (markerSprite.targetScale - markerSprite.currentScale));
+
+                        markers.forEach((marker) => {
+                            marker.shape.x = marker.currentX + lambda * (marker.targetX - marker.currentX);
+                            marker.shape.y = marker.currentY + lambda * (marker.targetY - marker.currentY);
+                            marker.shape.scale.set(marker.currentScale + lambda * (marker.targetScale - marker.currentScale));
                         });
 
                         renderer.render(container);
