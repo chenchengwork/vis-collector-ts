@@ -3,7 +3,7 @@
  * @type {{apiDomain}}
  */
 var ENV = (function () {
-    var apiDomain = "http://localhost:9000";
+    var apiDomain = "http://localhost:4001";
     var rootPath = "/";
 
     return {

@@ -6,12 +6,11 @@ const { doDev, pipe } = require("webpack-pipe");
 const webpackConfig = mkWebpackConfig([pipe.development]);
 
 doDev({
-	webpackConfig,
+    webpackConfig,
     devServerConfig: {},
-	host: "localhost",
-	port: 9000
+    host: "localhost",
+    port: 4001
 });
-
 
 
 

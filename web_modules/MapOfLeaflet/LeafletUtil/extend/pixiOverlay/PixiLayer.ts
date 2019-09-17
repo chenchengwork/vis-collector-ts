@@ -1,7 +1,7 @@
-import L, {LeafletEvent} from 'leaflet';
+import L, {LatLng, LeafletEvent} from 'leaflet';
 import PixiOverlay, { PIXI, Options, Utils, PixiOverlayInterface } from './PixiOverlay';
+import { TypeCircleMarker } from './PixiLayerType';
 import { d3Color, d3Scale } from './tool';
-
 import { solveCollision } from './algorithm';
 
 const getPixiOverlay = (callback: (utils: Utils) => void, pixiContainer: PIXI.Container, opts: Options) => {
@@ -95,7 +95,7 @@ export default class PixiLayer {
         this.doDraw(assembleShape, triangle, {bounds: polygonLatLngs as L.LatLngBoundsExpression});
     }
 
-
+    // 添加具有click事件marker
     addMarkerForClick = <T>(data: T[]) => {
         const map = this.map;
         const loader = new PIXI.Loader();
@@ -119,42 +119,13 @@ export default class PixiLayer {
                 let prevZoom: number;
                 const markerSprites = [] as PIXI.Sprite[];
 
-                const markers = [] as {
-                    shape: PIXI.Sprite;
-                    textureIndex: number;
+                const markers = [] as TypeCircleMarker[];
 
-                    x0?: number;
-                    y0?: number;
-                    xp?: number;
-                    yp?: number;
-                    r?: number;
-                    r0?: number;
-                    xMin?: number;
-                    xMax?: number;
-                    yMin?: number;
-                    yMax?: number;
-                    cache?: {
-                        [index: number]: {
-                            x: number;
-                            y: number;
-                            r: number;
-                        }
-                    }
-
-                    currentX?: number;
-                    currentY?: number;
-                    targetX?: number;
-                    targetY?: number;
-                    currentScale?: number;
-                    targetScale?: number;
-                }[];
-
-                let colorScale = d3Scale.scaleLinear()
-                    .domain([0, 50, 100])
-                    .range(["#c6233c", "#ffd300", "#008000"]);
+                // @ts-ignore
+                let colorScale = d3Scale.scaleLinear().domain([0, 50, 100]).range(["#c6233c", "#ffd300", "#008000"]);
 
                 let frame: number = null;
-                let focus: PIXI.Sprite = null;
+                let focus: TypeCircleMarker = null;
 
                 return (utils: Utils) => {
                     const zoom = utils.getMap().getZoom();
@@ -167,7 +138,6 @@ export default class PixiLayer {
 
                     if (firstDraw) {
                         prevZoom = zoom;
-                        console.log('11212111212121212')
                         console.time("time1")
                         data.forEach((item) => {
                             const coords = project([item.latitude, item.longitude]);
@@ -190,23 +160,24 @@ export default class PixiLayer {
 
                         console.timeEnd("time1")
 
+                        //--------------------生成各个层级碰撞检测数据集(很耗性能, 尝试将其改成web worker的方式)-------------------------
                         console.time("time2")
                         const quadTrees = new Map();
                         for (let z = map.getMinZoom(); z <= map.getMaxZoom(); z++) {
                             const rInit = ((z <= 7) ? 10 : 24) / utils.getScale(z);
-                            // quadTrees.set(z, solveCollision(markerSprites, {r0: rInit, zoom: z}));
                             quadTrees.set(z, solveCollision(markers, {r0: rInit, zoom: z}));
                         }
                         console.timeEnd("time2");
-                        console.log('quadTrees->', quadTrees);
 
-                        function findMarker(ll) {
+
+                        function findMarker(ll: L.LatLng) {
                             const layerPoint = project(ll);
                             const quadTree = quadTrees.get(utils.getMap().getZoom());
-                            let marker;
+                            let marker: TypeCircleMarker = null;
                             const rMax = quadTree.rMax;
                             let found = false;
-                            quadTree.visit(function(quad, x1, y1, x2, y2) {
+                            // @ts-ignore
+                            quadTree.visit(function(quad, x1: number, y1: number, x2: number, y2: number) {
                                 if (!quad.length) {
                                     const dx = quad.data.shape.x - layerPoint.x;
                                     const dy = quad.data.shape.y - layerPoint.y;
@@ -223,7 +194,7 @@ export default class PixiLayer {
                         }
 
                         // 鼠标点击事件
-                        map.on('click', function(e) {
+                        map.on('click', function(e: L.LeafletMouseEvent) {
                             let redraw = false;
                             if (focus) {
                                 focus.shape.texture = textures[focus.textureIndex];
@@ -233,7 +204,6 @@ export default class PixiLayer {
 
                             const marker = findMarker(e.latlng);
                             if (marker) {
-                                // marker.texture = focusTextures[marker.textureIndex];
                                 marker.shape.texture = focusTextures[marker.textureIndex];
                                 focus = marker;
                                 redraw = true;

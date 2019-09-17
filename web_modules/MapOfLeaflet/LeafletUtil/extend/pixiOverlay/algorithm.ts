@@ -1,8 +1,8 @@
 import { quadtree, Quadtree, QuadtreeLeaf } from 'd3-quadtree';
 
 interface Circle {
-    x0: number;
-    y0: number;
+    x0?: number;
+    y0?: number;
 
 
     currentX?: number;
@@ -34,9 +34,8 @@ interface Opts {
  */
 export const solveCollision = function(circles: Circle[], opts: Opts) {
     // opts = opts || {};
-    const tree: Quadtree<Circle[]> = quadtree()
-        .x((d) => d.xp)
-        .y((d) => d.yp);
+    // @ts-ignore
+    const tree: Quadtree<Circle[]> = quadtree().x((d) => d.xp).y((d) => d.yp);
 
     if (opts.extent !== undefined) tree.extent(opts.extent);
     let rMax = 0;
@@ -115,14 +114,18 @@ export const solveCollision = function(circles: Circle[], opts: Opts) {
             }
         }
 
+        // @ts-ignore
         tree.visit(collide(circle));
         rMax = Math.max(rMax, circle.r);
+        // @ts-ignore
         tree.add(circle);
     });
 
     if (opts.zoom !== undefined) {
         circles.forEach((circle) => {
+            // @ts-ignore
             circle.cache = circle.cache || {};
+            // @ts-ignore
             circle.cache[opts.zoom] = {
                 x: circle.xp,
                 y: circle.yp,
@@ -130,15 +133,16 @@ export const solveCollision = function(circles: Circle[], opts: Opts) {
             };
         });
     }
-    const ret = quadtree()
-        .x((d) => d.xp)
-        .y((d) => d.yp);
+    // @ts-ignore
+    const ret = quadtree().x((d) => d.xp).y((d) => d.yp);
     let rMax2 = 0;
     circles.forEach((circle) => {
+        // @ts-ignore
         ret.add(circle);
         rMax2 = Math.max(rMax2, circle.r);
     });
 
+    // @ts-ignore
     ret.rMax = rMax2;
 
     return ret;
