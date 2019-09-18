@@ -1,11 +1,14 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import * as PropTypes from 'prop-types';
-import { Link } from "react-router-dom";
+import { Link, withRouter, RouteComponentProps } from "react-router-dom";
 import * as css from 'styled-jsx/css';
 import { Layout, Menu } from 'antd';
 import { TypeMenu } from '../constants/EnumDefaultMenus'
+import MapCommandDispatcher from "../MapCommandDispatcher";
 import AppIcon from "../AppIcon";
 import {theme} from "../theme";
+import {EnumMapCommand} from "../constants/EnumMapCommand";
+import {queryString} from '@/utils/T'
 
 // 获取默认展开的菜单keys
 const recursionOpenKeys = (menus: TypeMenu[], currentUrl: string, openKeys: string[] = []) => {
@@ -54,6 +57,19 @@ const formatLeftMenu = (menus: TypeMenu[], currentUrl: string) => menus.map((val
         const target = val.target || "";
         const RouteLink = target === "_blank" ? ({children, to,  ...rest}: {children: React.ReactNode, to: string, target: string}) => (<a href={to} {...rest}>{children}</a>) : Link;
 
+        if(val.mapCommand){
+            // const key = JSON.stringify({mapCommand: val.mapCommand, url: val.url || ""});
+            const key = val.mapCommand;
+
+            return (
+                // @ts-ignore
+                <Menu.Item key={key} url={val.url}>
+                    {val.icon ? <AppIcon {...val.icon} style={{ fontSize: 14, marginRight: 10 }} /> : null}
+                    <span>{val.label}</span>
+                </Menu.Item>
+            );
+        }
+
         return (
             <Menu.Item key={realUrl}>
                 <RouteLink to={linkTo} target={target}>
@@ -65,16 +81,26 @@ const formatLeftMenu = (menus: TypeMenu[], currentUrl: string) => menus.map((val
     }
 });
 
-interface MenuLeftProps {
+interface MenuLeftProps extends RouteComponentProps{
     leftMenu: TypeMenu[];
     currentUrl: string;
     leftWidth: number;
     collapsed: boolean;
     onLeftMenuCollapse: (collapsed: boolean) => void;
+    mapCommandDispatcher: MapCommandDispatcher;
 }
 
-const MenuLeft: React.FC<MenuLeftProps> = ({leftMenu, currentUrl, leftWidth, collapsed, onLeftMenuCollapse}) => {
+const MenuLeft: React.FC<MenuLeftProps> = ({leftMenu, currentUrl, leftWidth, collapsed, onLeftMenuCollapse, mapCommandDispatcher, history}) => {
     if (leftMenu.length < 1) return null;
+    const { mapCommand } = queryString.parse(history.location.search);
+    const [currentMapCommand, setCurrentMapCommand] = useState(mapCommand as string);
+
+    useEffect(() => {
+        if(mapCommand) {
+            setCurrentMapCommand(mapCommand as string);
+            mapCommandDispatcher.emit(mapCommand)
+        }
+    }, [mapCommand])
 
     // language=SCSS
     const {styles, className} = css.resolve`
@@ -100,8 +126,20 @@ const MenuLeft: React.FC<MenuLeftProps> = ({leftMenu, currentUrl, leftWidth, col
             <Menu
                 theme="dark"
                 mode="inline"
-                selectedKeys={[currentUrl]}
+                selectedKeys={[currentMapCommand || currentUrl]}
                 defaultOpenKeys={recursionOpenKeys(leftMenu, currentUrl)}
+                onClick={(e) => {
+                    const isMapCommand = Object.values(EnumMapCommand).includes(e.key);
+                    if(e.item.props.url == currentUrl && isMapCommand){
+                        setCurrentMapCommand(e.key);
+                        mapCommandDispatcher.emit(e.key);
+                    }else if(e.item.props.url !== currentUrl && isMapCommand){
+                        setCurrentMapCommand(e.key);
+                        history.push(`${e.item.props.url}?mapCommand=${e.key}`)
+                    }else {
+                        setCurrentMapCommand(null)
+                    }
+                }}
             >
                 {formatLeftMenu(leftMenu, currentUrl)}
             </Menu>
@@ -119,4 +157,4 @@ MenuLeft.propTypes = {
     onLeftMenuCollapse: PropTypes.func.isRequired,
 };
 
-export default MenuLeft;
+export default withRouter(MenuLeft);

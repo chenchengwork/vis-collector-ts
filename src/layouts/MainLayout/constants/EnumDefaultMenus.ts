@@ -2,6 +2,7 @@
  * Created by chencheng on 17-9-14.
  */
 import EnumRouter from '@/constants/EnumRouter';
+import { EnumMapCommand } from "./EnumMapCommand";
 
 /**
  * 枚举默认收起左侧菜单的URL
@@ -19,16 +20,17 @@ export const EnumIconTypes = {
 };
 
 export interface TypeIcon {
-    appType: string,
-    iconType: string
+    appType: string;
+    iconType: string;
 }
 
 export interface TypeMenu {
-    label?: string
-    icon?: TypeIcon
-    url?: string[]|string
-    target?: string
-    children?: TypeMenu[]
+    label?: string;
+    icon?: TypeIcon;
+    mapCommand?: string;
+    url?: string[]|string;
+    target?: string;
+    children?: TypeMenu[];
 }
 
 
@@ -69,6 +71,15 @@ export const EnumDefaultMenus: TypeMenu[] = [
                     iconType: 'fuwei'
                 },
                 label: "leaflet",
+                url: EnumRouter.leaflet,
+            },
+            {
+                icon: {
+                    appType: EnumIconTypes.custom,
+                    iconType: 'fuwei'
+                },
+                label: "leaflet添加点",
+                mapCommand: EnumMapCommand.leafletAddPoint,
                 url: EnumRouter.leaflet,
             },
             {

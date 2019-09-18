@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import { Layout } from 'antd';
 import prompt from '@/utils/prompt';
@@ -8,6 +8,7 @@ import { logout } from '@/services/auth';
 import EnumRouter from '@/constants/EnumRouter';
 import { LayoutCtx } from './layoutContext';
 import {theme} from './theme';
+import MapCommandDispatcher from './MapCommandDispatcher'
 
 import MenuHeader from './MenuHeader';
 import MenuLeft from './MenuLeft';
@@ -17,8 +18,15 @@ import MainContent from "./MainContent"
 export {MainHeader}
 export {MainContent}
 export {LayoutCtx}
+const mapCommandDispatcher = new MapCommandDispatcher();
+export { mapCommandDispatcher }
 
 const MainLayout: React.FC<RouteComponentProps> = (props) => {
+    console.log("first render");
+
+    useEffect(() => {
+
+    }, []);
 
     /**
      * 获取左侧菜单宽度
@@ -72,6 +80,7 @@ const MainLayout: React.FC<RouteComponentProps> = (props) => {
                     leftWidth={appMenuLeftWidth}
                     collapsed={leftMenuCollapsed}
                     onLeftMenuCollapse={handleLeftMenuCollapse}
+                    mapCommandDispatcher={mapCommandDispatcher}
                 />
 
                 {/*内容区域*/}

@@ -1,7 +1,8 @@
-import React, {useContext, useMemo, Fragment} from 'react';
+import React, {useContext, useMemo, Fragment, useEffect} from 'react';
 import { observer } from 'mobx-react-lite';
 import { MapUtilCtx } from "#/MapOfLeaflet";
-import BaseWidget, { WidgetStore } from '@/components/app/BaseWidget'
+import BaseWidget, { WidgetStore } from '@/components/app/BaseWidget';
+import { mapCommandDispatcher } from '@/layouts/MainLayout';
 import { EnumWidget } from '../constants';
 import EnumDynamicWidgets from './EnumDynamicWidgets';
 
@@ -10,6 +11,16 @@ const Widgets: React.FC = () => {
     const mapUtil = useContext(MapUtilCtx);
     const widgetStore = useMemo(() => new WidgetStore(EnumWidget), []);
     const { isShowWidget, widgetTypeToVal } = widgetStore;
+
+    useEffect(() => {
+        const listenFn = (mapCommand:string) => {
+            console.log("mapCommand->", mapCommand)
+        };
+
+        mapCommandDispatcher.listen(listenFn);
+
+        return () => mapCommandDispatcher.off(listenFn);
+    }, []);
 
     return (
         <Fragment>
