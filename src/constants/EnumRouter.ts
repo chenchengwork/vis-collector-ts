@@ -10,6 +10,7 @@ const EnumRouter = {
     login: to('login'),		        // 登录
     leaflet: to('leaflet'),
     mapboxgl: to('mapboxgl'),
+    videoPlayer: to('videoPlayer'),
 };
 
 export default EnumRouter;

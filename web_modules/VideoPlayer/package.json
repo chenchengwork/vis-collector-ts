@@ -1,0 +1,14 @@
+{
+  "name": "videoplayer",
+  "version": "1.0.0",
+  "author": "chencheng <daniel_txy@163.com>",
+  "description": "map of leaflet",
+  "main": "src/index",
+  "dependencies": {
+    "video.js": "^7.6.5",
+    "videojs-flash": "^2.2.1"
+  },
+  "devDependencies": {
+    "@types/video.js": "^7.2.15"
+  }
+}

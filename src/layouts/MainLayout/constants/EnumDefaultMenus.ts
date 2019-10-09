@@ -90,6 +90,14 @@ export const EnumDefaultMenus: TypeMenu[] = [
                 label: "mapboxgl",
                 url: EnumRouter.mapboxgl,
             },
+            {
+                icon: {
+                    appType: EnumIconTypes.custom,
+                    iconType: 'fuwei'
+                },
+                label: "videoPlayer",
+                url: EnumRouter.videoPlayer,
+            },
         ]
     }
 ];

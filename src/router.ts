@@ -24,6 +24,11 @@ const routes = [
         component: import("@/pages/MapboxglMap"),
         stores: {}
     },
+    {
+        uri: EnumRouter.videoPlayer,
+        component: import("@/pages/VideoPlayer"),
+        stores: {}
+    },
 ];
 
 
